@@ -6,7 +6,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PortfolioController;
-use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
@@ -29,14 +28,25 @@ Route::get('/download-cv', [PortfolioController::class, 'downloadCV'])->name('do
 // =====================
 
 Route::get('/admin/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.submit');
+Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.submit')->middleware('throttle.login');
+Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('throttle.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// CSRF token refresh route (accessible without authentication)
+Route::get('/admin/csrf-token', function() {
+    return response()->json(['token' => csrf_token()]);
+});
+
+// Redirect /admin to login if not authenticated
+Route::get('/admin', function () {
+    return redirect()->route('admin.dashboard');
+});
 
 // =====================
 // PROTECTED ADMIN ROUTES
 // =====================
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/dashboard-data', [AdminController::class, 'getDashboardData'])->name('dashboard.data');
@@ -70,10 +80,22 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/messages/mark-all-read', [MessageController::class, 'markAllAsRead'])->name('messages.mark-all-read');
     Route::delete('/messages/{id}', [MessageController::class, 'destroy'])->name('messages.destroy');
     Route::get('/messages-stats', [MessageController::class, 'stats'])->name('messages.stats');
+    // Inside the admin group
+    Route::post('/messages/{id}/reply', [MessageController::class, 'reply'])->name('messages.reply');
 
     // Profile routes - ADD THESE
-    Route::put('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
-    Route::put('/profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
+
+    // Notification routes
+    Route::get('/notifications', [AdminController::class, 'getNotifications'])->name('notifications');
+    Route::post('/notifications/{id}/read', [AdminController::class, 'markNotificationAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllNotificationsAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{id}', [AdminController::class, 'deleteNotification'])->name('notifications.delete');
+    Route::delete('/notifications/clear-all', [AdminController::class, 'clearAllNotifications'])->name('notifications.clear-all');
+    
+    // Analytics
+    Route::get('/analytics', [AdminController::class, 'getAnalytics'])->name('analytics');
 });
 
 Route::get('/blog', function () {
@@ -94,3 +116,7 @@ Route::get('/test-email', function () {
 });
 
 Route::get('/test-auto-reply', [ContactController::class, 'testEmail']);
+
+// Include test routes
+include __DIR__ . '/test.php';
+

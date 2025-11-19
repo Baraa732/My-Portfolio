@@ -1621,3 +1621,1182 @@ body {
     border-radius: 4px;
     border-left: 3px solid var(--danger);
 }
+
+/* Enhanced Input Fields */
+.form-group {
+   margin-bottom: 1.5rem;
+   animation: fadeInUp 0.6s ease-out;
+}
+
+.form-label {
+   display: block;
+   margin-bottom: 0.5rem;
+   color: var(--light);
+   font-weight: 600;
+   font-size: 0.9rem;
+   text-transform: uppercase;
+   letter-spacing: 0.5px;
+}
+
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+input[type="file"],
+textarea,
+select {
+   width: 100%;
+   padding: 0.875rem 1rem;
+   background: rgba(255, 255, 255, 0.05);
+   border: 1px solid rgba(255, 255, 255, 0.1);
+   border-radius: var(--border-radius-sm);
+   color: var(--light);
+   font-size: 0.9rem;
+   transition: var(--transition);
+   backdrop-filter: blur(10px);
+   font-family: 'Inter', sans-serif;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="url"]:focus,
+textarea:focus,
+select:focus {
+   outline: none;
+   border-color: var(--accent);
+   box-shadow: 0 0 0 3px rgba(76, 111, 255, 0.1);
+   background: rgba(255, 255, 255, 0.08);
+   transform: translateY(-2px);
+}
+
+/* File Input Styling */
+input[type="file"] {
+   padding: 0.75rem;
+   background: rgba(255, 255, 255, 0.03);
+   border: 2px dashed rgba(255, 255, 255, 0.1);
+   transition: var(--transition);
+}
+
+input[type="file"]:hover {
+   border-color: var(--accent);
+   background: rgba(76, 111, 255, 0.05);
+}
+
+input[type="file"]::file-selector-button {
+   background: var(--gradient);
+   color: var(--light);
+   border: none;
+   padding: 0.5rem 1rem;
+   border-radius: var(--border-radius-sm);
+   margin-right: 1rem;
+   font-weight: 600;
+   cursor: pointer;
+   transition: var(--transition);
+}
+
+input[type="file"]::file-selector-button:hover {
+   transform: translateY(-2px);
+   box-shadow: 0 4px 12px rgba(76, 111, 255, 0.3);
+}
+
+/* Range Slider Enhancement */
+input[type="range"] {
+   -webkit-appearance: none;
+   width: 100%;
+   height: 6px;
+   background: rgba(255, 255, 255, 0.1);
+   border-radius: 10px;
+   outline: none;
+   margin: 1rem 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+   -webkit-appearance: none;
+   width: 20px;
+   height: 20px;
+   background: var(--gradient);
+   border-radius: 50%;
+   cursor: pointer;
+   border: 2px solid var(--darker);
+   box-shadow: 0 2px 8px rgba(76, 111, 255, 0.3);
+   transition: var(--transition);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+   transform: scale(1.2);
+   box-shadow: 0 4px 12px rgba(76, 111, 255, 0.4);
+}
+
+input[type="range"]::-moz-range-thumb {
+   width: 20px;
+   height: 20px;
+   background: var(--gradient);
+   border-radius: 50%;
+   cursor: pointer;
+   border: 2px solid var(--darker);
+   box-shadow: 0 2px 8px rgba(76, 111, 255, 0.3);
+}
+
+.percentage-display {
+   color: var(--accent);
+   font-weight: 700;
+   font-size: 0.9rem;
+   margin-left: 0.5rem;
+}
+
+/* Checkbox and Radio Button Enhancement */
+.checkbox-label,
+.radio-label {
+   display: flex;
+   align-items: center;
+   gap: 0.75rem;
+   cursor: pointer;
+   padding: 0.5rem 0;
+   transition: var(--transition);
+   border-radius: var(--border-radius-sm);
+}
+
+.checkbox-label:hover,
+.radio-label:hover {
+   background: rgba(255, 255, 255, 0.05);
+   transform: translateX(5px);
+}
+
+.checkbox-label input[type="checkbox"],
+.radio-label input[type="radio"] {
+   display: none;
+}
+
+.checkmark {
+   width: 20px;
+   height: 20px;
+   border: 2px solid rgba(255, 255, 255, 0.3);
+   border-radius: 4px;
+   position: relative;
+   transition: var(--transition);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.radio-label .checkmark {
+   border-radius: 50%;
+}
+
+.checkbox-label input[type="checkbox"]:checked+.checkmark,
+.radio-label input[type="radio"]:checked+.checkmark {
+   background: var(--gradient);
+   border-color: var(--accent);
+}
+
+.checkbox-label input[type="checkbox"]:checked+.checkmark::after {
+   content: '✓';
+   color: var(--light);
+   font-size: 0.8rem;
+   font-weight: bold;
+}
+
+.radio-label input[type="radio"]:checked+.checkmark::after {
+   content: '';
+   width: 8px;
+   height: 8px;
+   background: var(--light);
+   border-radius: 50%;
+}
+
+/* Enhanced Skill Form Styles */
+.skill-form-container {
+   max-width: 500px;
+   margin: 0 auto;
+}
+
+.skill-preview {
+   background: rgba(255, 255, 255, 0.05);
+   border-radius: var(--border-radius);
+   padding: 1.5rem;
+   margin-bottom: 1.5rem;
+   border: 1px solid rgba(255, 255, 255, 0.1);
+   text-align: center;
+}
+
+.skill-preview-icon {
+   font-size: 3rem;
+   margin-bottom: 1rem;
+   color: var(--accent);
+   transition: var(--transition);
+}
+
+.skill-preview:hover .skill-preview-icon {
+   transform: scale(1.1) rotate(5deg);
+}
+
+.skill-preview-name {
+   font-size: 1.2rem;
+   font-weight: 700;
+   margin-bottom: 0.5rem;
+   color: var(--light);
+}
+
+.skill-progress-bar {
+   width: 100%;
+   height: 8px;
+   background: rgba(255, 255, 255, 0.1);
+   border-radius: 10px;
+   overflow: hidden;
+   margin: 1rem 0;
+}
+
+.skill-progress-fill {
+   height: 100%;
+   background: var(--gradient);
+   border-radius: 10px;
+   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+   position: relative;
+   overflow: hidden;
+}
+
+.skill-progress-fill::after {
+   content: '';
+   position: absolute;
+   top: 0;
+   left: -100%;
+   width: 100%;
+   height: 100%;
+   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+   animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+   0% {
+      left: -100%;
+   }
+
+   100% {
+      left: 100%;
+   }
+}
+
+/* Enhanced Profile Section */
+.profile-section {
+   animation: fadeInUp 0.8s ease-out;
+}
+
+.profile-header {
+   text-align: center;
+   margin-bottom: 2rem;
+   padding: 2rem;
+   background: linear-gradient(145deg, rgba(26, 54, 93, 0.4), rgba(15, 20, 25, 0.6));
+   border-radius: var(--border-radius);
+   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-avatar {
+   width: 120px;
+   height: 120px;
+   background: var(--gradient);
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: var(--light);
+   font-size: 2.5rem;
+   font-weight: 700;
+   margin: 0 auto 1rem;
+   box-shadow: 0 8px 32px rgba(76, 111, 255, 0.3);
+   transition: var(--transition);
+   position: relative;
+   overflow: hidden;
+}
+
+.profile-avatar::before {
+   content: '';
+   position: absolute;
+   top: -50%;
+   left: -50%;
+   width: 200%;
+   height: 200%;
+   background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+   transform: rotate(45deg);
+   transition: var(--transition);
+}
+
+.profile-avatar:hover::before {
+   transform: rotate(45deg) translate(50%, 50%);
+}
+
+.profile-avatar:hover {
+   transform: scale(1.05);
+   box-shadow: 0 12px 40px rgba(76, 111, 255, 0.4);
+}
+
+.profile-name {
+   font-size: 1.8rem;
+   font-weight: 800;
+   margin-bottom: 0.5rem;
+   background: var(--gradient);
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
+   background-clip: text;
+}
+
+.profile-title {
+   color: var(--gray-dark);
+   font-size: 1.1rem;
+   font-weight: 500;
+}
+
+.profile-stats {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+   gap: 1rem;
+   margin-bottom: 2rem;
+}
+
+.profile-stat {
+   background: rgba(255, 255, 255, 0.05);
+   padding: 1rem;
+   border-radius: var(--border-radius);
+   text-align: center;
+   border: 1px solid rgba(255, 255, 255, 0.1);
+   transition: var(--transition);
+}
+
+.profile-stat:hover {
+   transform: translateY(-5px);
+   border-color: var(--accent);
+   box-shadow: 0 8px 24px rgba(76, 111, 255, 0.2);
+}
+
+.profile-stat-value {
+   font-size: 2rem;
+   font-weight: 800;
+   color: var(--accent);
+   margin-bottom: 0.5rem;
+}
+
+.profile-stat-label {
+   color: var(--gray-dark);
+   font-size: 0.9rem;
+   font-weight: 600;
+   text-transform: uppercase;
+   letter-spacing: 0.5px;
+}
+
+/* Enhanced Project Forms */
+.project-form-grid {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 1.5rem;
+   animation: fadeIn 0.8s ease-out;
+}
+
+@media (max-width: 768px) {
+   .project-form-grid {
+      grid-template-columns: 1fr;
+   }
+}
+
+.project-image-preview {
+   width: 100%;
+   height: 200px;
+   background: rgba(255, 255, 255, 0.05);
+   border: 2px dashed rgba(255, 255, 255, 0.1);
+   border-radius: var(--border-radius);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   margin-bottom: 1rem;
+   overflow: hidden;
+   transition: var(--transition);
+   position: relative;
+}
+
+.project-image-preview:hover {
+   border-color: var(--accent);
+   background: rgba(76, 111, 255, 0.05);
+}
+
+.project-image-preview img {
+   max-width: 100%;
+   max-height: 100%;
+   object-fit: cover;
+   border-radius: var(--border-radius-sm);
+}
+
+.project-image-placeholder {
+   text-align: center;
+   color: var(--gray-dark);
+}
+
+.project-image-placeholder i {
+   font-size: 3rem;
+   margin-bottom: 1rem;
+   color: var(--accent);
+}
+
+.tech-tags-input {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 0.5rem;
+   margin-top: 0.5rem;
+}
+
+.tech-tag {
+   background: rgba(76, 111, 255, 0.2);
+   color: var(--accent);
+   padding: 0.4rem 0.8rem;
+   border-radius: 20px;
+   font-size: 0.8rem;
+   font-weight: 700;
+   border: 1px solid rgba(76, 111, 255, 0.3);
+   transition: var(--transition);
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
+}
+
+.tech-tag:hover {
+   transform: scale(1.05);
+   background: rgba(76, 111, 255, 0.3);
+   box-shadow: 0 4px 12px rgba(76, 111, 255, 0.2);
+}
+
+.tech-tag-remove {
+   background: none;
+   border: none;
+   color: var(--light);
+   cursor: pointer;
+   font-size: 0.7rem;
+   width: 16px;
+   height: 16px;
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   transition: var(--transition);
+}
+
+.tech-tag-remove:hover {
+   background: rgba(255, 255, 255, 0.2);
+   transform: scale(1.1);
+}
+
+/* Form Actions Enhancement */
+.form-actions {
+   display: flex;
+   gap: 1rem;
+   justify-content: flex-end;
+   margin-top: 2rem;
+   padding-top: 1.5rem;
+   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.form-actions.center {
+   justify-content: center;
+}
+
+.form-actions.left {
+   justify-content: flex-start;
+}
+
+/* Textarea Specific Styles */
+textarea {
+   resize: vertical;
+   min-height: 100px;
+   font-family: 'Inter', sans-serif;
+   line-height: 1.5;
+}
+
+textarea.form-control {
+   background: rgba(255, 255, 255, 0.05);
+   border: 1px solid rgba(255, 255, 255, 0.1);
+   border-radius: var(--border-radius-sm);
+   color: var(--light);
+   padding: 0.875rem 1rem;
+   transition: var(--transition);
+   backdrop-filter: blur(10px);
+}
+
+textarea.form-control:focus {
+   outline: none;
+   border-color: var(--accent);
+   box-shadow: 0 0 0 3px rgba(76, 111, 255, 0.1);
+   background: rgba(255, 255, 255, 0.08);
+}
+
+/* Select Dropdown Enhancement */
+select {
+   appearance: none;
+   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234c6fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+   background-repeat: no-repeat;
+   background-position: right 1rem center;
+   background-size: 1rem;
+   padding-right: 3rem;
+}
+
+select option {
+   background: var(--darker);
+   color: var(--light);
+   border: none;
+   padding: 0.5rem;
+}
+
+/* Form Validation Styles */
+.form-group.error input,
+.form-group.error textarea,
+.form-group.error select {
+   border-color: var(--danger);
+   box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.1);
+}
+
+.error-message {
+   color: var(--danger);
+   font-size: 0.8rem;
+   margin-top: 0.25rem;
+   padding: 0.25rem 0.5rem;
+   background: rgba(245, 101, 101, 0.1);
+   border-radius: 4px;
+   border-left: 3px solid var(--danger);
+   animation: slideInRight 0.3s ease-out;
+}
+
+.success-message {
+   color: var(--success);
+   font-size: 0.8rem;
+   margin-top: 0.25rem;
+   padding: 0.25rem 0.5rem;
+   background: rgba(72, 187, 120, 0.1);
+   border-radius: 4px;
+   border-left: 3px solid var(--success);
+   animation: slideInRight 0.3s ease-out;
+}
+
+/* Loading States for Forms */
+.form-loading {
+   position: relative;
+   pointer-events: none;
+   opacity: 0.7;
+}
+
+.form-loading::after {
+   content: '';
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   width: 20px;
+   height: 20px;
+   margin: -10px 0 0 -10px;
+   border: 2px solid transparent;
+   border-top: 2px solid var(--accent);
+   border-radius: 50%;
+   animation: spin 1s linear infinite;
+}
+
+/* Enhanced Placeholder Styles */
+::placeholder {
+   color: rgba(255, 255, 255, 0.4);
+   font-weight: 400;
+}
+
+::-webkit-input-placeholder {
+   color: rgba(255, 255, 255, 0.4);
+   font-weight: 400;
+}
+
+::-moz-placeholder {
+   color: rgba(255, 255, 255, 0.4);
+   font-weight: 400;
+   opacity: 1;
+}
+
+:-ms-input-placeholder {
+   color: rgba(255, 255, 255, 0.4);
+   font-weight: 400;
+}
+
+/* Focus States for Accessibility */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+   outline: 2px solid var(--accent);
+   outline-offset: 2px;
+}
+
+/* Disabled State Styles */
+input:disabled,
+textarea:disabled,
+select:disabled,
+button:disabled {
+   opacity: 0.5;
+   cursor: not-allowed;
+   transform: none !important;
+}
+
+/* Required Field Indicators */
+.form-label.required::after {
+   content: '*';
+   color: var(--danger);
+   margin-left: 0.25rem;
+}
+
+/* Form Group with Icons */
+.form-group-with-icon {
+   position: relative;
+}
+
+.form-group-with-icon .form-icon {
+   position: absolute;
+   left: 1rem;
+   top: 50%;
+   transform: translateY(-50%);
+   color: var(--gray-dark);
+   transition: var(--transition);
+}
+
+.form-group-with-icon input {
+   padding-left: 3rem;
+}
+
+.form-group-with-icon input:focus+.form-icon {
+   color: var(--accent);
+   transform: translateY(-50%) scale(1.1);
+}
+
+/* Animation for form elements */
+.form-group {
+   animation: fadeInUp 0.6s ease-out forwards;
+   opacity: 0;
+}
+
+.form-group:nth-child(1) {
+   animation-delay: 0.1s;
+}
+
+.form-group:nth-child(2) {
+   animation-delay: 0.2s;
+}
+
+.form-group:nth-child(3) {
+   animation-delay: 0.3s;
+}
+
+.form-group:nth-child(4) {
+   animation-delay: 0.4s;
+}
+
+.form-group:nth-child(5) {
+   animation-delay: 0.5s;
+}
+
+.form-group:nth-child(6) {
+   animation-delay: 0.6s;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+   overflow: hidden;
+   position: fixed;
+   width: 100%;
+   height: 100%;
+}
+
+/* Alternative method that works better for some cases */
+body.modal-open-2 {
+   overflow: hidden;
+   position: relative;
+}
+
+/* Modal overlay should handle scrolling instead */
+.modal-overlay {
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background: rgba(0, 0, 0, 0.8);
+   backdrop-filter: blur(10px);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   z-index: 10000;
+   animation: fadeIn 0.3s ease-out;
+   overflow-y: auto;
+   /* Allow scrolling within modal if needed */
+   padding: 20px;
+}
+
+.modal-content {
+   background: linear-gradient(145deg, var(--darker), var(--secondary));
+   border: 1px solid rgba(255, 255, 255, 0.1);
+   border-radius: var(--border-radius);
+   width: 90%;
+   max-width: 600px;
+   /* Adjust based on your needs */
+   max-height: 90vh;
+   /* Limit height to viewport */
+   overflow-y: auto;
+   /* Scroll inside modal if content is too long */
+   backdrop-filter: blur(40px);
+   animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+   box-shadow: var(--shadow-lg);
+}
+
+/* For larger modals like project forms */
+.modal-content.large {
+   max-width: 800px;
+   max-height: 95vh;
+}
+
+.modal-content.xlarge {
+   max-width: 1000px;
+   max-height: 95vh;
+}
+
+/* Simple CSS-only solution */
+.modal-open {
+   overflow: hidden;
+   height: 100vh;
+}
+
+.modal-overlay {
+   position: fixed;
+   overflow-y: auto;
+}
+
+/* Hide scrollbar for modal-content large but keep scrolling */
+.modal-content.large {
+   max-width: 800px;
+   max-height: 90vh;
+   overflow-y: auto;
+   /* Keep scrolling enabled */
+   scrollbar-width: none;
+   /* Firefox */
+   -ms-overflow-style: none;
+   /* IE and Edge */
+}
+
+/* Hide scrollbar for Webkit browsers (Chrome, Safari, Edge) */
+.modal-content.large::-webkit-scrollbar {
+   display: none;
+   width: 0;
+   height: 0;
+   background: transparent;
+}
+
+/* Ensure smooth scrolling */
+.modal-content.large {
+   -webkit-overflow-scrolling: touch;
+   /* Smooth scrolling on iOS */
+}
+
+/* Optional: Add subtle gradient to indicate scrollable content */
+.modal-content.large::before {
+   content: '';
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   height: 20px;
+   background: linear-gradient(to bottom, rgba(15, 20, 25, 0.8), transparent);
+   pointer-events: none;
+   opacity: 0;
+   transition: opacity 0.3s ease;
+   border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.modal-content.large::after {
+   content: '';
+   position: absolute;
+   bottom: 0;
+   left: 0;
+   right: 0;
+   height: 20px;
+   background: linear-gradient(to top, rgba(15, 20, 25, 0.8), transparent);
+   pointer-events: none;
+   opacity: 0;
+   transition: opacity 0.3s ease;
+   border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+/* Show gradients when content is scrollable */
+.modal-content.large.scroll-top::after,
+.modal-content.large.scroll-middle::before,
+.modal-content.large.scroll-middle::after,
+.modal-content.large.scroll-bottom::before {
+   opacity: 1;
+}
+
+.form-group .error {
+   border-color: var(--danger) !important;
+   box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1) !important;
+}
+
+.error-message {
+   color: var(--danger);
+   font-size: 0.8rem;
+   margin-top: 0.25rem;
+   padding: 0.25rem 0.5rem;
+   background: rgba(220, 53, 69, 0.1);
+   border-radius: 4px;
+   border-left: 3px solid var(--danger);
+   animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+   from {
+      opacity: 0;
+      transform: translateY(-10px);
+   }
+
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+/* [file name]: dashboard.css */
+/* Add these styles to the existing CSS */
+
+.message-thread {
+   margin: 1.5rem 0;
+   border-left: 3px solid var(--accent);
+   padding-left: 1rem;
+}
+
+.reply-item {
+   background: rgba(76, 111, 255, 0.05);
+   border: 1px solid rgba(76, 111, 255, 0.2);
+   border-radius: var(--border-radius-sm);
+   padding: 1rem;
+   margin-bottom: 1rem;
+   position: relative;
+}
+
+.reply-item::before {
+   content: '';
+   position: absolute;
+   left: -1rem;
+   top: 0;
+   width: 2px;
+   height: 100%;
+   background: var(--accent);
+}
+
+.reply-header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   margin-bottom: 0.5rem;
+}
+
+.reply-author {
+   font-weight: 700;
+   color: var(--accent);
+}
+
+.reply-date {
+   font-size: 0.8rem;
+   color: var(--gray-dark);
+}
+
+.reply-content {
+   white-space: pre-wrap;
+   line-height: 1.5;
+   margin: 0;
+}
+
+/* Enhanced message item styles */
+.message-item {
+   transition: all 0.3s ease;
+   cursor: pointer;
+}
+
+.message-item:hover {
+   transform: translateX(5px);
+   border-color: rgba(76, 111, 255, 0.3);
+}
+
+.message-item.unread {
+   border-left: 4px solid var(--accent);
+   background: rgba(76, 111, 255, 0.05);
+}
+
+/* Notification Styles */
+.notification-wrapper {
+   position: relative;
+   margin-right: 1rem;
+}
+
+.notification-btn {
+   position: relative;
+   background: none;
+   border: none;
+   color: var(--text-color);
+   font-size: 1.2rem;
+   cursor: pointer;
+   padding: 0.5rem;
+   border-radius: var(--border-radius);
+   transition: var(--transition);
+}
+
+.notification-btn:hover {
+   background: var(--hover-color);
+   color: var(--primary-color);
+}
+
+.notification-badge {
+   position: absolute;
+   top: -5px;
+   right: -5px;
+   background: var(--accent-color);
+   color: white;
+   border-radius: 50%;
+   width: 18px;
+   height: 18px;
+   font-size: 0.7rem;
+   font-weight: 600;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   animation: pulse 2s infinite;
+}
+
+.notifications-dropdown {
+   position: absolute;
+   top: 100%;
+   right: 0;
+   width: 380px;
+   background: var(--card-bg);
+   border: 1px solid var(--border-color);
+   border-radius: var(--border-radius-lg);
+   box-shadow: var(--shadow-lg);
+   z-index: 1000;
+   margin-top: 0.5rem;
+   animation: slideDown 0.2s ease-out;
+}
+
+.notifications-header {
+   padding: 1.25rem 1.5rem 0;
+   border-bottom: 1px solid var(--border-color);
+}
+
+.notifications-header h3 {
+   margin: 0 0 1rem 0;
+   font-size: 1.1rem;
+   font-weight: 600;
+   color: var(--text-color);
+}
+
+.notifications-actions {
+   display: flex;
+   gap: 1rem;
+   margin-bottom: 1rem;
+}
+
+.btn-link {
+   background: none;
+   border: none;
+   color: var(--primary-color);
+   font-size: 0.8rem;
+   cursor: pointer;
+   padding: 0;
+   text-decoration: underline;
+}
+
+.btn-link:hover {
+   color: var(--accent-color);
+}
+
+.notifications-list {
+   max-height: 400px;
+   overflow-y: auto;
+}
+
+.no-notifications {
+   padding: 3rem 2rem;
+   text-align: center;
+   color: var(--muted-color);
+}
+
+.no-notifications i {
+   font-size: 2rem;
+   margin-bottom: 1rem;
+   opacity: 0.5;
+}
+
+.notification-item {
+   display: flex;
+   align-items: flex-start;
+   padding: 1rem 1.5rem;
+   border-bottom: 1px solid var(--border-color);
+   transition: var(--transition);
+   gap: 1rem;
+}
+
+.notification-item:hover {
+   background: var(--hover-color);
+}
+
+.notification-item.unread {
+   background: rgba(var(--primary-rgb), 0.05);
+}
+
+.notification-icon {
+   width: 32px;
+   height: 32px;
+   border-radius: 50%;
+   background: var(--primary-color);
+   color: white;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   flex-shrink: 0;
+   font-size: 0.9rem;
+}
+
+.notification-content {
+   flex: 1;
+   min-width: 0;
+}
+
+.notification-title {
+   font-weight: 600;
+   color: var(--text-color);
+   margin-bottom: 0.25rem;
+   font-size: 0.9rem;
+}
+
+.notification-message {
+   color: var(--muted-color);
+   font-size: 0.85rem;
+   line-height: 1.4;
+   margin-bottom: 0.5rem;
+   word-wrap: break-word;
+}
+
+.notification-time {
+   font-size: 0.75rem;
+   color: var(--muted-color);
+}
+
+.notification-actions {
+   display: flex;
+   flex-direction: column;
+   gap: 0.25rem;
+   opacity: 0;
+   transition: var(--transition);
+}
+
+.notification-item:hover .notification-actions {
+   opacity: 1;
+}
+
+.btn-icon {
+   background: none;
+   border: none;
+   color: var(--muted-color);
+   cursor: pointer;
+   padding: 0.25rem;
+   border-radius: var(--border-radius-sm);
+   font-size: 0.8rem;
+   transition: var(--transition);
+}
+
+.btn-icon:hover {
+   color: var(--text-color);
+   background: var(--hover-color);
+}
+
+.notifications-footer {
+   padding: 1rem 1.5rem;
+   border-top: 1px solid var(--border-color);
+   text-align: center;
+}
+
+.view-all-link {
+   color: var(--primary-color);
+   text-decoration: none;
+   font-size: 0.9rem;
+   font-weight: 500;
+}
+
+.view-all-link:hover {
+   color: var(--accent-color);
+}
+
+/* Animations */
+@keyframes slideDown {
+   from {
+      opacity: 0;
+      transform: translateY(-10px);
+   }
+
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+@keyframes pulse {
+   0% {
+      transform: scale(1);
+   }
+
+   50% {
+      transform: scale(1.1);
+   }
+
+   100% {
+      transform: scale(1);
+   }
+}
+
+/* Toast Notifications */
+.toast-notification {
+   position: fixed;
+   top: 20px;
+   right: 20px;
+   background: var(--success-color);
+   color: white;
+   padding: 1rem 1.5rem;
+   border-radius: var(--border-radius);
+   box-shadow: var(--shadow-lg);
+   z-index: 10000;
+   animation: slideInRight 0.3s ease-out;
+   max-width: 300px;
+}
+
+.toast-notification.error {
+   background: var(--error-color);
+}
+
+@keyframes slideInRight {
+   from {
+      transform: translateX(100%);
+      opacity: 0;
+   }
+
+   to {
+      transform: translateX(0);
+      opacity: 1;
+   }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+   .notifications-dropdown {
+      position: fixed;
+      top: 60px;
+      right: 10px;
+      left: 10px;
+      width: auto;
+   }
+
+   .notification-wrapper {
+      margin-right: 0.5rem;
+   }
+}

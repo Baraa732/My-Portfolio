@@ -86,6 +86,123 @@ class NotificationSystem {
     }
 }
 
+// Notification Component for Alpine.js
+function notificationComponent() {
+    return {
+        isOpen: false,
+        notifications: [],
+        unreadCount: 0,
+
+        init() {
+            this.loadNotifications();
+        },
+
+        async loadNotifications() {
+            try {
+                const response = await fetch('/admin/notifications', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                this.notifications = data.notifications || [];
+                this.unreadCount = data.unread_count || 0;
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                // Don't show error toast for notifications to avoid spam
+            }
+        },
+
+        async markAsRead(notificationId) {
+            try {
+                const response = await fetch(`/admin/notifications/${notificationId}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    this.notifications = this.notifications.map(notification =>
+                        notification.id === notificationId
+                            ? { ...notification, read_at: new Date().toISOString() }
+                            : notification
+                    );
+                    this.unreadCount = Math.max(0, this.unreadCount - 1);
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        },
+
+        // Remove the Echo setup for now unless you have it configured
+        setupEcho() {
+            // Comment out or remove Echo initialization if not set up
+            /*
+            if (typeof Echo !== 'undefined') {
+                this.echo = Echo;
+                this.echo.private('admin-notifications')
+                    .listen('NewContactMessage', (e) => {
+                        this.notifications.unshift(e.notification);
+                        this.unreadCount++;
+                        this.showToast('New message received!');
+                    });
+            }
+            */
+        },
+
+        // Keep other methods the same but add better error handling
+        async markAllAsRead() {
+            try {
+                const response = await fetch('/admin/notifications/mark-all-read', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    this.notifications = this.notifications.map(notification => ({
+                        ...notification,
+                        read_at: notification.read_at || new Date().toISOString()
+                    }));
+                    this.unreadCount = 0;
+                }
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+            }
+        },
+
+        formatTime(timestamp) {
+            // Your existing formatTime method
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+
+            return date.toLocaleDateString();
+        }
+    };
+}
+
 class AdminDashboard {
     constructor() {
         this.initializeCounts();
@@ -914,28 +1031,28 @@ class AdminDashboard {
             const messages = await response.json();
 
             let html = `
-                <section class="section-content">
-                    <div class="section-card">
-                        <div class="card-header">
-                            <h3 class="card-title">Contact Messages</h3>
-                            <div class="card-actions">
-                                <button class="btn btn-primary btn-sm" onclick="adminDashboard.markAllAsRead()">
-                                    <i class="fas fa-check-double"></i> Mark All Read
-                                </button>
-                            </div>
+            <section class="section-content">
+                <div class="section-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Contact Messages</h3>
+                        <div class="card-actions">
+                            <button class="btn btn-primary btn-sm" onclick="adminDashboard.markAllAsRead()">
+                                <i class="fas fa-check-double"></i> Mark All Read
+                            </button>
                         </div>
-                        <div class="card-body">
-                            <div class="messages-list" id="messages-container">
-            `;
+                    </div>
+                    <div class="card-body">
+                        <div class="messages-list" id="messages-container">
+        `;
 
             if (!messages || messages.length === 0) {
                 html += `
-                    <div class="text-center w-100" style="padding: 3rem;">
-                        <i class="fas fa-envelope" style="font-size: 3rem; color: var(--gray-dark); margin-bottom: 1rem;"></i>
-                        <h4 style="color: var(--gray); margin-bottom: 1rem;">No Messages Yet</h4>
-                        <p style="color: var(--gray-dark);">No contact messages have been received yet.</p>
-                    </div>
-                `;
+                <div class="text-center w-100" style="padding: 3rem;">
+                    <i class="fas fa-envelope" style="font-size: 3rem; color: var(--gray-dark); margin-bottom: 1rem;"></i>
+                    <h4 style="color: var(--gray); margin-bottom: 1rem;">No Messages Yet</h4>
+                    <p style="color: var(--gray-dark);">No contact messages have been received yet.</p>
+                </div>
+            `;
             } else {
                 messages.forEach(message => {
                     const shortMessage = message.message.length > 150
@@ -949,48 +1066,54 @@ class AdminDashboard {
                         minute: '2-digit'
                     });
 
+                    const replyCount = message.replies ? message.replies.length : 0;
+
                     html += `
-                        <div class="message-item ${message.is_read ? '' : 'unread'}" data-message-id="${message.id}">
-                            <div class="d-flex justify-between align-start mb-2">
-                                <div style="flex: 1;">
-                                    <h4 style="color: var(--light); margin: 0 0 0.25rem 0;">${message.subject}</h4>
-                                    <div style="display: flex; gap: 1rem; color: var(--gray-dark); font-size: 0.9rem;">
-                                        <span><i class="fas fa-user"></i> ${message.name}</span>
-                                        <span><i class="fas fa-envelope"></i> ${message.email}</span>
-                                        <span><i class="fas fa-clock"></i> ${date}</span>
-                                    </div>
-                                </div>
-                                <div class="d-flex gap-1">
-                                    ${!message.is_read ? `
-                                        <button class="btn btn-success btn-sm" onclick="adminDashboard.markAsRead(${message.id})" title="Mark as read">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                    ` : ''}
-                                    <button class="btn btn-primary btn-sm" onclick="adminDashboard.viewMessage(${message.id})" title="View message">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" onclick="adminDashboard.deleteMessage(${message.id})" title="Delete message">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                    <div class="message-item ${message.is_read ? '' : 'unread'}" data-message-id="${message.id}">
+                        <div class="d-flex justify-between align-start mb-2">
+                            <div style="flex: 1;">
+                                <h4 style="color: var(--light); margin: 0 0 0.25rem 0;">${message.subject}</h4>
+                                <div style="display: flex; gap: 1rem; color: var(--gray-dark); font-size: 0.9rem;">
+                                    <span><i class="fas fa-user"></i> ${message.name}</span>
+                                    <span><i class="fas fa-envelope"></i> ${message.email}</span>
+                                    <span><i class="fas fa-clock"></i> ${date}</span>
+                                    ${replyCount > 0 ? `<span><i class="fas fa-reply"></i> ${replyCount} reply${replyCount !== 1 ? 's' : ''}</span>` : ''}
                                 </div>
                             </div>
-                            <p style="color: var(--gray); line-height: 1.4; margin: 0;">${shortMessage}</p>
-                            ${!message.is_read ? `
-                                <div style="margin-top: 0.5rem;">
-                                    <span class="status-badge status-active">New</span>
-                                </div>
-                            ` : ''}
+                            <div class="d-flex gap-1">
+                                ${!message.is_read ? `
+                                    <button class="btn btn-success btn-sm" onclick="adminDashboard.markAsRead(${message.id})" title="Mark as read">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="btn btn-info btn-sm" onclick="adminDashboard.replyToMessage(${message.id})" title="Reply to message">
+                                    <i class="fas fa-reply"></i>
+                                </button>
+                                <button class="btn btn-primary btn-sm" onclick="adminDashboard.viewMessage(${message.id})" title="View message">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="adminDashboard.deleteMessage(${message.id})" title="Delete message">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
-                    `;
+                        <p style="color: var(--gray); line-height: 1.4; margin: 0;">${shortMessage}</p>
+                        ${!message.is_read ? `
+                            <div style="margin-top: 0.5rem;">
+                                <span class="status-badge status-active">New</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
                 });
             }
 
             html += `
-                            </div>
                         </div>
                     </div>
-                </section>
-            `;
+                </div>
+            </section>
+        `;
 
             await this.updateMessagesCount();
             return html;
@@ -998,21 +1121,21 @@ class AdminDashboard {
         } catch (error) {
             console.error('Error loading messages:', error);
             return `
-                <section class="section-content">
-                    <div class="section-card">
-                        <div class="card-body">
-                            <div class="text-center">
-                                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--danger); margin-bottom: 1rem;"></i>
-                                <h4 style="color: var(--light); margin-bottom: 1rem;">Error Loading Messages</h4>
-                                <p style="color: var(--gray);">${error.message}</p>
-                                <button class="btn btn-primary" onclick="adminDashboard.loadSectionContent('messages')">
-                                    <i class="fas fa-redo"></i> Try Again
-                                </button>
-                            </div>
+            <section class="section-content">
+                <div class="section-card">
+                    <div class="card-body">
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--danger); margin-bottom: 1rem;"></i>
+                            <h4 style="color: var(--light); margin-bottom: 1rem;">Error Loading Messages</h4>
+                            <p style="color: var(--gray);">${error.message}</p>
+                            <button class="btn btn-primary" onclick="adminDashboard.loadSectionContent('messages')">
+                                <i class="fas fa-redo"></i> Try Again
+                            </button>
                         </div>
                     </div>
-                </section>
-            `;
+                </div>
+            </section>
+        `;
         }
     }
 
@@ -1022,25 +1145,18 @@ class AdminDashboard {
                 method: 'PUT',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
 
-            const result = await response.json();
-
-            if (result.success) {
-                this.showNotification('Message marked as read', 'success');
-
+            if (response.ok) {
                 const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
                 if (messageElement) {
                     messageElement.classList.remove('unread');
-                    messageElement.querySelector('.status-badge')?.remove();
-                    messageElement.querySelector('.btn-success')?.remove();
+                    messageElement.querySelector('.btn-success').remove();
                 }
-
                 await this.updateMessagesCount();
-                this.loadDashboardData();
+                this.showNotification('Message marked as read', 'success');
             }
         } catch (error) {
             console.error('Error marking message as read:', error);
@@ -1049,35 +1165,231 @@ class AdminDashboard {
     }
 
     async markAllAsRead() {
-        if (!confirm('Mark all messages as read?')) return;
-
         try {
             const response = await fetch(`${this.baseUrl}/messages/mark-all-read`, {
                 method: 'PUT',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.ok) {
+                document.querySelectorAll('.message-item.unread').forEach(item => {
+                    item.classList.remove('unread');
+                    const markReadBtn = item.querySelector('.btn-success');
+                    if (markReadBtn) markReadBtn.remove();
+                });
+                await this.updateMessagesCount();
+                this.showNotification('All messages marked as read', 'success');
+            }
+        } catch (error) {
+            console.error('Error marking all messages as read:', error);
+            this.showNotification('Error marking all messages as read', 'error');
+        }
+    }
+
+    async replyToMessage(messageId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/messages/${messageId}`);
+            const message = await response.json();
+
+            const modalHtml = `
+            <div class="modal-overlay">
+                <div class="modal-content" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Reply to ${message.name}</h3>
+                        <button class="modal-close" onclick="adminDashboard.closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                <div>
+                                    <strong>From:</strong><br>
+                                    ${message.name}<br>
+                                    <a href="mailto:${message.email}">${message.email}</a>
+                                </div>
+                                <div>
+                                    <strong>Date:</strong><br>
+                                    ${new Date(message.created_at).toLocaleString()}
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <strong>Subject:</strong><br>
+                                ${message.subject}
+                            </div>
+                            <div style="background: rgba(115, 12, 14, 0.1); padding: 1rem; border-radius: var(--border-radius-sm); margin-bottom: 1.5rem;">
+                                <strong>Original Message:</strong>
+                                <p style="margin-top: 0.5rem; white-space: pre-wrap; line-height: 1.5;">${message.message}</p>
+                            </div>
+                        </div>
+
+                        <form id="reply-form">
+                            <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
+                            <div class="form-group">
+                                <label class="form-label">Your Reply</label>
+                                <textarea name="message" rows="6" class="form-control" placeholder="Type your reply here..." required style="width: 100%; padding: 1rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--border-radius-sm); color: var(--light); font-family: inherit;"></textarea>
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeModal()">Cancel</button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-paper-plane"></i> Send Reply
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `;
+
+            const modal = document.createElement('div');
+            modal.innerHTML = modalHtml;
+            document.body.appendChild(modal);
+
+            const form = modal.querySelector('#reply-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.sendReply(messageId, new FormData(form));
+            });
+
+        } catch (error) {
+            console.error('Error loading message for reply:', error);
+            this.showNotification('Error loading message', 'error');
+        }
+    }
+
+    async sendReply(messageId, formData) {
+        try {
+            const submitBtn = document.querySelector('#reply-form button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+            const response = await fetch(`${this.baseUrl}/messages/${messageId}/reply`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
-                }
+                },
+                body: formData
             });
 
             const result = await response.json();
 
             if (result.success) {
-                this.showNotification('All messages marked as read', 'success');
+                this.showNotification('Reply sent successfully', 'success');
+                this.closeModal();
+                await this.loadSectionContent('messages');
+            } else {
+                this.showNotification(result.message || 'Failed to send reply', 'error');
+            }
 
-                document.querySelectorAll('.message-item').forEach(item => {
-                    item.classList.remove('unread');
-                    item.querySelector('.status-badge')?.remove();
-                    item.querySelector('.btn-success')?.remove();
+        } catch (error) {
+            console.error('Error sending reply:', error);
+            this.showNotification('Error sending reply', 'error');
+        } finally {
+            const submitBtn = document.querySelector('#reply-form button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reply';
+            }
+        }
+    }
+
+    async viewMessage(messageId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/messages/${messageId}`);
+            const message = await response.json();
+
+            let repliesHtml = '';
+            if (message.replies && message.replies.length > 0) {
+                repliesHtml = `
+                <div style="margin-top: 2rem;">
+                    <h4 style="color: var(--light); margin-bottom: 1rem;">Conversation</h4>
+                    <div class="message-thread">
+            `;
+
+                message.replies.forEach(reply => {
+                    repliesHtml += `
+                    <div style="background: rgba(76, 111, 255, 0.1); padding: 1rem; border-radius: var(--border-radius-sm); margin-bottom: 1rem; border-left: 4px solid var(--accent);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <strong style="color: var(--accent);">Admin</strong>
+                            <small style="color: var(--gray-dark);">${new Date(reply.created_at).toLocaleString()}</small>
+                        </div>
+                        <p style="margin: 0; white-space: pre-wrap; line-height: 1.5;">${reply.message}</p>
+                    </div>
+                `;
                 });
 
-                await this.updateMessagesCount();
-                this.loadDashboardData();
+                repliesHtml += `</div></div>`;
             }
+
+            const modalHtml = `
+            <div class="modal-overlay">
+                <div class="modal-content" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Message from ${message.name}</h3>
+                        <button class="modal-close" onclick="adminDashboard.closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                <div>
+                                    <strong>From:</strong><br>
+                                    ${message.name}<br>
+                                    <a href="mailto:${message.email}">${message.email}</a>
+                                </div>
+                                <div>
+                                    <strong>Date:</strong><br>
+                                    ${new Date(message.created_at).toLocaleString()}
+                                </div>
+                            </div>
+                            <div>
+                                <strong>Subject:</strong><br>
+                                ${message.subject}
+                            </div>
+                        </div>
+                        <div style="background: rgba(115, 12, 14, 0.1); padding: 1rem; border-radius: var(--border-radius-sm); margin-bottom: 1.5rem;">
+                            <strong>Message:</strong>
+                            <p style="margin-top: 0.5rem; white-space: pre-wrap; line-height: 1.5;">${message.message}</p>
+                        </div>
+                        
+                        ${repliesHtml}
+
+                        ${message.ip_address ? `
+                            <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--gray-dark);">
+                                <strong>Technical Info:</strong><br>
+                                IP: ${message.ip_address}<br>
+                                User Agent: ${message.user_agent || 'N/A'}
+                            </div>
+                        ` : ''}
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeModal()">Close</button>
+                            <button type="button" class="btn btn-info" onclick="adminDashboard.replyToMessage(${message.id}); adminDashboard.closeModal();">
+                                <i class="fas fa-reply"></i> Reply
+                            </button>
+                            ${!message.is_read ? `
+                                <button type="button" class="btn btn-success" onclick="adminDashboard.markAsRead(${message.id}); adminDashboard.closeModal();">
+                                    Mark as Read
+                                </button>
+                            ` : ''}
+                            <button type="button" class="btn btn-danger" onclick="adminDashboard.deleteMessage(${message.id}); adminDashboard.closeModal();">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+            const modal = document.createElement('div');
+            modal.innerHTML = modalHtml;
+            document.body.appendChild(modal);
         } catch (error) {
-            console.error('Error marking all messages as read:', error);
-            this.showNotification('Error marking messages as read', 'error');
+            console.error('Error loading message:', error);
+            this.showNotification('Error loading message', 'error');
         }
     }
 
@@ -1113,115 +1425,29 @@ class AdminDashboard {
         }
     }
 
-    viewMessage(messageId) {
-        this.showMessageModal(messageId);
-    }
-
-    async showMessageModal(messageId) {
-        try {
-            const response = await fetch(`${this.baseUrl}/messages/${messageId}`);
-            const message = await response.json();
-
-            const modalHtml = `
-                <div class="modal-overlay">
-                    <div class="modal-content" style="max-width: 600px;">
-                        <div class="modal-header">
-                            <h3 class="modal-title">Message from ${message.name}</h3>
-                            <button class="modal-close" onclick="adminDashboard.closeModal()">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <div style="margin-bottom: 1.5rem;">
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                                    <div>
-                                        <strong>From:</strong><br>
-                                        ${message.name}<br>
-                                        <a href="mailto:${message.email}">${message.email}</a>
-                                    </div>
-                                    <div>
-                                        <strong>Date:</strong><br>
-                                        ${new Date(message.created_at).toLocaleString()}
-                                    </div>
-                                </div>
-                                <div>
-                                    <strong>Subject:</strong><br>
-                                    ${message.subject}
-                                </div>
-                            </div>
-                            <div style="background: rgba(115, 12, 14, 0.1); padding: 1rem; border-radius: var(--border-radius-sm);">
-                                <strong>Message:</strong>
-                                <p style="margin-top: 0.5rem; white-space: pre-wrap; line-height: 1.5;">${message.message}</p>
-                            </div>
-                            ${message.ip_address ? `
-                                <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--gray-dark);">
-                                    <strong>Technical Info:</strong><br>
-                                    IP: ${message.ip_address}<br>
-                                    User Agent: ${message.user_agent || 'N/A'}
-                                </div>
-                            ` : ''}
-                            <div class="modal-actions">
-                                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeModal()">Close</button>
-                                ${!message.is_read ? `
-                                    <button type="button" class="btn btn-success" onclick="adminDashboard.markAsRead(${message.id}); adminDashboard.closeModal();">
-                                        Mark as Read
-                                    </button>
-                                ` : ''}
-                                <button type="button" class="btn btn-danger" onclick="adminDashboard.deleteMessage(${message.id}); adminDashboard.closeModal();">
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const modal = document.createElement('div');
-            modal.innerHTML = modalHtml;
-            document.body.appendChild(modal);
-        } catch (error) {
-            console.error('Error loading message:', error);
-            this.showNotification('Error loading message', 'error');
-        }
-    }
-
     // =====================
     // FORM HANDLING
     // =====================
 
     async handleFormSubmit(form) {
         console.log('=== FORM SUBMISSION START ===');
-        console.log('Form action:', form.action);
-        console.log('Form method:', form.method);
 
-        // Prevent multiple submissions
         if (form.classList.contains('submitting')) {
             return;
         }
 
         const formData = new FormData(form);
-        const method = form.querySelector('input[name="_method"]')?.value || 'POST';
-
-        console.log('Final method with spoofing:', method);
-
-        // Show all form data for debugging
-        for (let [key, value] of formData.entries()) {
-            console.log(`Form data - ${key}:`, value);
-        }
-
         const button = form.querySelector('button[type="submit"]');
         const originalText = button.innerHTML;
 
-        // Show loading state and disable form
         form.classList.add('submitting');
         button.classList.add('loading');
         button.disabled = true;
         button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-        // Clear previous errors
-        this.clearFormErrors(form);
-
         try {
             const response = await fetch(form.action, {
-                method: 'POST', // Always use POST for FormData with Laravel spoofing
+                method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
@@ -1229,44 +1455,67 @@ class AdminDashboard {
                 body: formData
             });
 
-            console.log('Response status:', response.status);
+            const result = await response.json();
 
-            // Check if response is JSON
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const result = await response.json();
-                console.log('Response data:', result);
-
-                if (result.success) {
-                    this.showNotification(result.message, 'success');
-                    this.closeModal();
-                    await this.loadSectionContent(this.currentSection);
-                    this.loadDashboardData();
-                } else {
-                    // Show validation errors if they exist
-                    if (result.errors) {
-                        this.showFormErrors(form, result.errors);
-                        this.showNotification('Please fix the validation errors below', 'error');
-                    } else {
-                        this.showNotification(result.message || 'Operation failed', 'error');
-                    }
-                }
+            if (result.success) {
+                this.showNotification(result.message, 'success');
+                this.closeModal();
+                await this.loadSectionContent(this.currentSection);
+                this.loadDashboardData();
             } else {
-                // Handle non-JSON response (like HTML error pages)
-                const text = await response.text();
-                console.error('Non-JSON response:', text.substring(0, 500));
-                this.showNotification('Server returned an error. Check console for details.', 'error');
+                this.closeModal();
+                this.showNotification(result.message || 'An error occurred', 'error');
             }
+
         } catch (error) {
             console.error('Form submission error:', error);
-            this.showNotification('Network error occurred: ' + error.message, 'error');
+            this.closeModal();
+
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                this.showNotification('Network error. Please check your connection and try again.', 'error');
+            } else {
+                this.showNotification('An unexpected error occurred. Please try again.', 'error');
+            }
         } finally {
-            // Re-enable form
             form.classList.remove('submitting');
             button.classList.remove('loading');
             button.disabled = false;
             button.innerHTML = originalText;
         }
+    }
+
+    prettifyErrorMessage(errorMessage) {
+        console.log('Raw error message:', errorMessage);
+
+        // Handle duplicate entry errors
+        if (errorMessage.includes('Duplicate entry') && errorMessage.includes('for key')) {
+            // Extract the duplicate value from the error message
+            const match = errorMessage.match(/Duplicate entry '([^']+)'/);
+            const duplicateValue = match ? match[1] : 'this value';
+
+            return `A skill with the name "${duplicateValue}" already exists. Please use a different name.`;
+        }
+
+        // Handle other SQL constraint violations
+        if (errorMessage.includes('Integrity constraint violation')) {
+            if (errorMessage.includes('skills_name_unique')) {
+                return 'A skill with this name already exists. Please choose a different name.';
+            }
+            return 'This item already exists in the system. Please check for duplicates.';
+        }
+
+        // Handle SQL syntax errors (show generic message)
+        if (errorMessage.includes('SQLSTATE') || errorMessage.includes('SQL syntax')) {
+            return 'A database error occurred. Please try again.';
+        }
+
+        // Handle connection errors
+        if (errorMessage.includes('Connection: mysql')) {
+            return 'Database connection error. Please try again.';
+        }
+
+        // Return the original message if no specific formatting applies
+        return errorMessage.length > 150 ? 'An error occurred. Please check your input and try again.' : errorMessage;
     }
 
     // Add these helper methods for form error handling
@@ -1301,7 +1550,14 @@ class AdminDashboard {
                 border-radius: 4px;
                 border-left: 3px solid var(--danger);
             `;
-                errorElement.textContent = errors[fieldName][0];
+
+                // Prettify the error message
+                let errorText = errors[fieldName][0];
+                if (errorText.includes('unique')) {
+                    errorText = 'This value already exists. Please choose a different one.';
+                }
+
+                errorElement.textContent = errorText;
 
                 // Insert error message after the input
                 input.parentNode.appendChild(errorElement);
@@ -1584,6 +1840,7 @@ class AdminDashboard {
             }
             const data = await response.json();
             this.updateStats(data.stats);
+            this.updateRecentActivities(data.recent_activities);
 
             await this.updateSkillsCount();
             await this.updateProjectsCount();
@@ -1595,6 +1852,7 @@ class AdminDashboard {
                 active_skills: 0,
                 unread_messages: 0
             });
+            this.updateRecentActivities([]);
         }
     }
 
@@ -1608,6 +1866,39 @@ class AdminDashboard {
             if (skillsElement) skillsElement.textContent = stats.active_skills || 0;
             if (messagesElement) messagesElement.textContent = stats.unread_messages || 0;
         }
+    }
+
+    updateRecentActivities(activities) {
+        const tbody = document.querySelector('#recent-activities tbody');
+        if (!tbody) return;
+
+        if (!activities || activities.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">No recent activities</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = activities.map(activity => `
+            <tr>
+                <td>
+                    <div class="activity-action">
+                        <i class="${activity.icon || 'fas fa-circle'}"></i>
+                        ${activity.action}
+                    </div>
+                </td>
+                <td>
+                    <div class="activity-item">
+                        <div>${activity.item}</div>
+                        <small class="text-muted">by ${activity.user || 'System'}</small>
+                    </div>
+                </td>
+                <td>${activity.date}</td>
+                <td>
+                    <span class="status-badge ${activity.status.toLowerCase()}">
+                        ${activity.status}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
     }
 
     refreshDashboard() {
@@ -1629,11 +1920,34 @@ class AdminDashboard {
         const csrfToken = document.createElement('input');
         csrfToken.type = 'hidden';
         csrfToken.name = '_token';
-        csrfToken.value = document.querySelector('meta[name="csrf-token"]').content;
+        csrfToken.value = this.getCsrfToken();
 
         form.appendChild(csrfToken);
         document.body.appendChild(form);
         form.submit();
+    }
+
+    getCsrfToken() {
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        if (!token) {
+            console.error('CSRF token not found');
+            return '';
+        }
+        return token;
+    }
+
+    refreshCsrfToken() {
+        fetch('/admin/csrf-token', {
+            method: 'GET',
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.token) {
+                document.querySelector('meta[name="csrf-token"]').content = data.token;
+            }
+        })
+        .catch(error => console.error('Error refreshing CSRF token:', error));
     }
 
     showNotification(message, type = 'info') {
@@ -1649,18 +1963,186 @@ class AdminDashboard {
 
     // Other sections (simplified)
     async getAnalyticsContent() {
-        return `
-            <section class="section-content">
-                <div class="section-card">
-                    <div class="card-header">
-                        <h3 class="card-title">Analytics</h3>
+        try {
+            const response = await fetch(`${this.baseUrl}/analytics`);
+            const data = await response.json();
+            
+            return `
+                <section class="section-content">
+                    <!-- Analytics Stats Grid -->
+                    <div class="dashboard-grid">
+                        <div class="stat-card" data-stat="total-views">
+                            <div class="stat-header">
+                                <div class="stat-icon views">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-value">${data.page_views.total}</div>
+                                    <div class="stat-label">Total Views</div>
+                                </div>
+                                <div class="stat-trend trend-up">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+12%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card" data-stat="unique-visitors">
+                            <div class="stat-header">
+                                <div class="stat-icon visitors">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-value">${data.visitors.unique}</div>
+                                    <div class="stat-label">Unique Visitors</div>
+                                </div>
+                                <div class="stat-trend trend-up">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+8%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card" data-stat="monthly-views">
+                            <div class="stat-header">
+                                <div class="stat-icon monthly">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-value">${data.page_views.monthly}</div>
+                                    <div class="stat-label">This Month</div>
+                                </div>
+                                <div class="stat-trend trend-up">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+15%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card" data-stat="today-views">
+                            <div class="stat-header">
+                                <div class="stat-icon today">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-value">${data.page_views.daily}</div>
+                                    <div class="stat-label">Today</div>
+                                </div>
+                                <div class="stat-trend trend-up">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>+5%</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <p>Analytics dashboard will be implemented soon.</p>
+
+                    <!-- Analytics Cards -->
+                    <div class="analytics-section">
+                        <div class="section-card">
+                            <div class="card-header">
+                                <h2 class="card-title">Popular Pages</h2>
+                                <div class="card-actions">
+                                    <button class="btn btn-primary btn-sm" onclick="adminDashboard.refreshDashboard()">
+                                        <i class="fas fa-sync-alt"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="analytics-list">
+                                    ${data.popular_pages.map((page, index) => `
+                                        <div class="analytics-item">
+                                            <div class="item-rank">#${index + 1}</div>
+                                            <div class="item-info">
+                                                <div class="item-title">${page.page === '/' ? 'Home' : page.page}</div>
+                                                <div class="item-subtitle">${page.page}</div>
+                                            </div>
+                                            <div class="item-value">
+                                                <span class="value-number">${page.views}</span>
+                                                <span class="value-label">views</span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-card">
+                            <div class="card-header">
+                                <h2 class="card-title">Device Analytics</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="device-analytics">
+                                    ${data.device_stats.map(device => {
+                                        const total = data.device_stats.reduce((sum, d) => sum + d.count, 0);
+                                        const percentage = Math.round((device.count / total) * 100);
+                                        return `
+                                            <div class="device-stat">
+                                                <div class="device-info">
+                                                    <i class="fas fa-${device.device_type === 'Mobile' ? 'mobile-alt' : 'desktop'}"></i>
+                                                    <span class="device-name">${device.device_type || 'Unknown'}</span>
+                                                </div>
+                                                <div class="device-progress">
+                                                    <div class="progress-bar">
+                                                        <div class="progress-fill" style="width: ${percentage}%"></div>
+                                                    </div>
+                                                    <span class="device-percentage">${percentage}%</span>
+                                                </div>
+                                                <div class="device-count">${device.count}</div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-card">
+                            <div class="card-header">
+                                <h2 class="card-title">Browser Statistics</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="browser-analytics">
+                                    ${data.browser_stats.map(browser => {
+                                        const total = data.browser_stats.reduce((sum, b) => sum + b.count, 0);
+                                        const percentage = Math.round((browser.count / total) * 100);
+                                        return `
+                                            <div class="browser-stat">
+                                                <div class="browser-icon">
+                                                    <i class="fab fa-${browser.browser?.toLowerCase() || 'question'}"></i>
+                                                </div>
+                                                <div class="browser-info">
+                                                    <div class="browser-name">${browser.browser || 'Unknown'}</div>
+                                                    <div class="browser-usage">${browser.count} visits (${percentage}%)</div>
+                                                </div>
+                                                <div class="browser-chart">
+                                                    <div class="mini-chart" style="--percentage: ${percentage}%"></div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </section>
-        `;
+                </section>
+            `;
+        } catch (error) {
+            return `
+                <section class="section-content">
+                    <div class="section-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Analytics</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="error-state">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p>Error loading analytics data. Please try again.</p>
+                                <button class="btn btn-primary" onclick="adminDashboard.refreshDashboard()">Retry</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
     }
 
     async getSettingsContent() {
@@ -1683,4 +2165,9 @@ class AdminDashboard {
 document.addEventListener('DOMContentLoaded', () => {
     window.adminDashboard = new AdminDashboard();
     console.log('Admin Dashboard initialized successfully');
+});
+
+// Initialize Alpine.js notification component
+document.addEventListener('alpine:init', () => {
+    Alpine.data('notificationComponent', notificationComponent);
 });

@@ -7,11 +7,14 @@ use App\Models\Skill;
 use App\Models\Project;
 use App\Models\Contact;
 use App\Models\User;
+use App\Models\Analytics;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ActivityLogger;
 
 class AdminController extends Controller
 {
@@ -52,44 +55,35 @@ class AdminController extends Controller
 
     private function getRecentActivities()
     {
-        $activities = collect();
+        $logs = \App\Models\ActivityLog::with('user')
+            ->latest()
+            ->take(10)
+            ->get();
 
-        // Get recent updates from all models
-        $sections = Section::latest()->take(2)->get();
-        $projects = Project::latest()->take(2)->get();
-        $skills = Skill::latest()->take(1)->get();
-
-        foreach ($sections as $section) {
-            $activities->push([
-                'action' => 'Updated',
-                'item' => ucfirst($section->name) . ' Section',
-                'date' => $section->updated_at->diffForHumans(),
+        return $logs->map(function($log) {
+            return [
+                'action' => ucfirst($log->action),
+                'item' => $log->description,
+                'date' => $log->created_at->diffForHumans(),
                 'status' => 'Completed',
-                'icon' => 'fas fa-layer-group'
-            ]);
-        }
+                'icon' => $this->getActionIcon($log->action),
+                'user' => $log->user ? $log->user->name : 'System'
+            ];
+        });
+    }
 
-        foreach ($projects as $project) {
-            $activities->push([
-                'action' => $project->created_at->equalTo($project->updated_at) ? 'Added' : 'Updated',
-                'item' => $project->title,
-                'date' => $project->updated_at->diffForHumans(),
-                'status' => 'Completed',
-                'icon' => 'fas fa-project-diagram'
-            ]);
-        }
-
-        foreach ($skills as $skill) {
-            $activities->push([
-                'action' => $skill->created_at->equalTo($skill->updated_at) ? 'Added' : 'Updated',
-                'item' => $skill->name . ' Skill',
-                'date' => $skill->updated_at->diffForHumans(),
-                'status' => 'Completed',
-                'icon' => 'fas fa-code'
-            ]);
-        }
-
-        return $activities->sortByDesc('date')->take(5)->values();
+    private function getActionIcon($action)
+    {
+        return match($action) {
+            'login' => 'fas fa-sign-in-alt',
+            'logout' => 'fas fa-sign-out-alt',
+            'create' => 'fas fa-plus-circle',
+            'update' => 'fas fa-edit',
+            'delete' => 'fas fa-trash',
+            'view' => 'fas fa-eye',
+            'password_change' => 'fas fa-key',
+            default => 'fas fa-circle'
+        };
     }
 
     // Profile Management
@@ -106,7 +100,7 @@ class AdminController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:users,email,' . $user->uuid . ',uuid',
             'title' => 'nullable|string|max:255',
             'bio' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
@@ -134,11 +128,13 @@ class AdminController extends Controller
 
         try {
             $user->update($data);
+            $user->refresh(); // Refresh from database
+            ActivityLogger::logUpdate($user, 'Updated profile information');
 
             return response()->json([
                 'success' => true,
                 'message' => 'Profile updated successfully!',
-                'user' => $user
+                'user' => $user->fresh() // Get fresh data
             ]);
         } catch (\Exception $e) {
             \Log::error('Profile update error: ' . $e->getMessage());
@@ -178,6 +174,7 @@ class AdminController extends Controller
             $user->update([
                 'password' => Hash::make($request->new_password)
             ]);
+            ActivityLogger::log('password_change', 'Changed password', $user);
 
             return response()->json([
                 'success' => true,
@@ -757,33 +754,51 @@ class AdminController extends Controller
     // Analytics
     public function getAnalytics()
     {
-        $analytics = [
+        $totalViews = Analytics::count();
+        $todayViews = Analytics::whereDate('created_at', today())->count();
+        $weekViews = Analytics::where('created_at', '>=', now()->subWeek())->count();
+        $monthViews = Analytics::where('created_at', '>=', now()->subMonth())->count();
+        
+        $uniqueVisitors = Analytics::distinct('ip_address')->count();
+        
+        $popularPages = Analytics::selectRaw('page, COUNT(*) as views')
+            ->groupBy('page')
+            ->orderByDesc('views')
+            ->limit(5)
+            ->get();
+            
+        $deviceStats = Analytics::selectRaw('device_type, COUNT(*) as count')
+            ->groupBy('device_type')
+            ->get();
+            
+        $browserStats = Analytics::selectRaw('browser, COUNT(*) as count')
+            ->groupBy('browser')
+            ->orderByDesc('count')
+            ->limit(5)
+            ->get();
+            
+        $dailyViews = Analytics::selectRaw('DATE(created_at) as date, COUNT(*) as views')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        return response()->json([
             'page_views' => [
-                'total' => 12456,
-                'monthly' => 2345,
-                'weekly' => 567,
-                'daily' => 89
+                'total' => $totalViews,
+                'monthly' => $monthViews,
+                'weekly' => $weekViews,
+                'daily' => $todayViews
             ],
             'visitors' => [
-                'total' => 8456,
-                'returning' => 2341,
-                'new' => 6115
+                'unique' => $uniqueVisitors,
+                'total_visits' => $totalViews
             ],
-            'popular_pages' => [
-                ['page' => '/', 'views' => 4567],
-                ['page' => '/projects', 'views' => 2345],
-                ['page' => '/about', 'views' => 1876],
-                ['page' => '/contact', 'views' => 1567],
-            ],
-            'traffic_sources' => [
-                ['source' => 'Direct', 'percentage' => 45],
-                ['source' => 'Social', 'percentage' => 25],
-                ['source' => 'Search', 'percentage' => 20],
-                ['source' => 'Referral', 'percentage' => 10],
-            ]
-        ];
-
-        return response()->json($analytics);
+            'popular_pages' => $popularPages,
+            'device_stats' => $deviceStats,
+            'browser_stats' => $browserStats,
+            'daily_views' => $dailyViews
+        ]);
     }
 
     // Backup

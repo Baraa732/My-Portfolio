@@ -6,6 +6,7 @@ use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ActivityLogger;
 
 class ProjectController extends Controller
 {
@@ -66,6 +67,7 @@ class ProjectController extends Controller
             }
 
             $project = Project::create($data);
+            ActivityLogger::logCreate($project);
 
             return response()->json([
                 'success' => true,
@@ -116,6 +118,7 @@ class ProjectController extends Controller
             }
 
             $project->update($data);
+            ActivityLogger::logUpdate($project);
 
             return response()->json([
                 'success' => true,
@@ -149,6 +152,7 @@ class ProjectController extends Controller
 
             $projectTitle = $project->title;
             $project->delete();
+            ActivityLogger::log('delete', "Deleted project: {$projectTitle}");
 
             return response()->json([
                 'success' => true,

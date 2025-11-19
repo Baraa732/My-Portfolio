@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ActivityLogger;
 
 class SkillController extends Controller
 {
@@ -60,6 +61,7 @@ class SkillController extends Controller
             $data['order'] = $request->get('order', 0);
 
             $skill = Skill::create($data);
+            ActivityLogger::logCreate($skill);
 
             return response()->json([
                 'success' => true,
@@ -111,6 +113,7 @@ class SkillController extends Controller
             $data['order'] = $request->get('order', $skill->order);
 
             $skill->update($data);
+            ActivityLogger::logUpdate($skill);
 
             return response()->json([
                 'success' => true,
@@ -137,7 +140,9 @@ class SkillController extends Controller
                 ]);
             }
 
+            $skillName = $skill->name;
             $skill->delete();
+            ActivityLogger::log('delete', "Deleted skill: {$skillName}");
 
             return response()->json([
                 'success' => true,

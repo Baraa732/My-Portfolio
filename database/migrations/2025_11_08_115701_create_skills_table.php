@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('skills', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->integer('percentage');
             $table->string('icon');
             $table->boolean('is_active')->default(true);
-            $table->integer('order')->default(0);
+            $table->integer('order')->default(1);
             $table->timestamps();
         });
     }

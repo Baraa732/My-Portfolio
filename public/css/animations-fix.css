@@ -1,0 +1,77 @@
+/* Animation Fix - Direct CSS Animations */
+
+/* Make animations work immediately */
+.animate-on-scroll {
+    animation: fadeInUp 1s ease forwards !important;
+}
+
+.fade-in-up {
+    animation: fadeInUp 1s ease forwards !important;
+}
+
+.fade-in-left {
+    animation: fadeInLeft 1s ease forwards !important;
+}
+
+.fade-in-right {
+    animation: fadeInRight 1s ease forwards !important;
+}
+
+.scale-in {
+    animation: scaleIn 0.8s ease forwards !important;
+}
+
+.bounce-in {
+    animation: bounceIn 1s ease forwards !important;
+}
+
+.slide-in-left {
+    animation: slideInLeft 1s ease forwards !important;
+}
+
+.slide-in-right {
+    animation: slideInRight 1s ease forwards !important;
+}
+
+.typewriter {
+    animation: typing 3s steps(40, end) forwards !important;
+}
+
+.floating {
+    animation: floating 3s ease-in-out infinite !important;
+}
+
+.pulse {
+    animation: pulse 2s ease-in-out infinite !important;
+}
+
+/* Stagger delays */
+.stagger-1 { animation-delay: 0.1s !important; }
+.stagger-2 { animation-delay: 0.2s !important; }
+.stagger-3 { animation-delay: 0.3s !important; }
+.stagger-4 { animation-delay: 0.4s !important; }
+.stagger-5 { animation-delay: 0.5s !important; }
+.stagger-6 { animation-delay: 0.6s !important; }
+
+/* Missing keyframes */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
