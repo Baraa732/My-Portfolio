@@ -79,7 +79,7 @@
       /* Projects Section */
       .projects-section {
          padding: 120px 0;
-         background: var(--gradient-dark);
+         /* background: var(--gradient-dark); */
          position: relative;
          overflow: hidden;
       }

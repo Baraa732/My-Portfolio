@@ -2,7 +2,218 @@ class NotificationSystem {
     constructor() {
         this.notificationContainer = null;
         this.activeNotifications = new Set();
+        this.isConfirmOpen = false;
         this.init();
+    }
+
+    // Custom animated confirmation dialog
+    async showConfirm(message, title = 'Confirm Action', type = 'warning') {
+        if (this.isConfirmOpen) return false;
+        this.isConfirmOpen = true;
+        
+        return new Promise((resolve) => {
+            const confirmModal = document.createElement('div');
+            confirmModal.className = 'confirm-modal-overlay';
+            confirmModal.innerHTML = `
+                <div class="confirm-modal animate-in">
+                    <div class="confirm-header">
+                        <div class="confirm-icon ${type}">
+                            <i class="fas fa-${this.getConfirmIcon(type)}"></i>
+                        </div>
+                        <h3 class="confirm-title">${title}</h3>
+                    </div>
+                    <div class="confirm-body">
+                        <p class="confirm-message">${message}</p>
+                    </div>
+                    <div class="confirm-actions">
+                        <button class="confirm-btn cancel-btn" data-action="cancel">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button class="confirm-btn confirm-btn-action" data-action="confirm">
+                            <i class="fas fa-check"></i> Confirm
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Add styles
+            if (!document.getElementById('confirm-modal-styles')) {
+                const styles = document.createElement('style');
+                styles.id = 'confirm-modal-styles';
+                styles.textContent = `
+                    .confirm-modal-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0, 0, 0, 0.7);
+                        backdrop-filter: blur(5px);
+                        z-index: 10000;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        animation: fadeIn 0.3s ease;
+                    }
+                    .confirm-modal {
+                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 16px;
+                        padding: 0;
+                        max-width: 400px;
+                        width: 90%;
+                        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                        overflow: hidden;
+                    }
+                    .confirm-modal.animate-in {
+                        animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    }
+                    .confirm-header {
+                        padding: 2rem 2rem 1rem;
+                        text-align: center;
+                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    }
+                    .confirm-icon {
+                        width: 60px;
+                        height: 60px;
+                        border-radius: 50%;
+                        margin: 0 auto 1rem;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.5rem;
+                        animation: iconPulse 2s infinite;
+                    }
+                    .confirm-icon.warning {
+                        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                        color: white;
+                    }
+                    .confirm-icon.danger {
+                        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                        color: white;
+                    }
+                    .confirm-title {
+                        color: #fff;
+                        margin: 0;
+                        font-size: 1.2rem;
+                        font-weight: 600;
+                    }
+                    .confirm-body {
+                        padding: 1rem 2rem;
+                    }
+                    .confirm-message {
+                        color: #cbd5e1;
+                        margin: 0;
+                        line-height: 1.5;
+                        text-align: center;
+                    }
+                    .confirm-actions {
+                        padding: 1rem 2rem 2rem;
+                        display: flex;
+                        gap: 1rem;
+                        justify-content: center;
+                    }
+                    .confirm-btn {
+                        padding: 0.75rem 1.5rem;
+                        border: none;
+                        border-radius: 8px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        min-width: 100px;
+                        justify-content: center;
+                    }
+                    .cancel-btn {
+                        background: rgba(255, 255, 255, 0.1);
+                        color: #cbd5e1;
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                    }
+                    .cancel-btn:hover:not(:disabled) {
+                        background: rgba(255, 255, 255, 0.2);
+                        transform: translateY(-2px);
+                    }
+                    .confirm-btn-action {
+                        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                        color: white;
+                    }
+                    .confirm-btn-action:hover:not(:disabled) {
+                        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                        transform: translateY(-2px);
+                        box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+                    }
+                    .confirm-btn:disabled {
+                        cursor: not-allowed;
+                        opacity: 0.5 !important;
+                        transform: none !important;
+                    }
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes fadeOut {
+                        from { opacity: 1; }
+                        to { opacity: 0; }
+                    }
+                    @keyframes modalSlideIn {
+                        from {
+                            opacity: 0;
+                            transform: scale(0.8) translateY(-20px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: scale(1) translateY(0);
+                        }
+                    }
+                    @keyframes iconPulse {
+                        0%, 100% { transform: scale(1); }
+                        50% { transform: scale(1.05); }
+                    }
+                `;
+                document.head.appendChild(styles);
+            }
+
+            document.body.appendChild(confirmModal);
+
+            let isHandled = false;
+            
+            const handleAction = (action) => {
+                if (isHandled) return;
+                isHandled = true;
+                
+                this.isConfirmOpen = false;
+                confirmModal.remove();
+                resolve(action === 'confirm');
+            };
+
+            confirmModal.addEventListener('click', (e) => {
+                if (isHandled) return;
+                if (e.target === confirmModal) handleAction('cancel');
+                if (e.target.closest('[data-action]')) {
+                    handleAction(e.target.closest('[data-action]').dataset.action);
+                }
+            });
+
+            // ESC key support
+            const escHandler = (e) => {
+                if (e.key === 'Escape' && !isHandled) {
+                    document.removeEventListener('keydown', escHandler);
+                    handleAction('cancel');
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        });
+    }
+
+    getConfirmIcon(type) {
+        const icons = {
+            warning: 'exclamation-triangle',
+            danger: 'trash',
+            info: 'info-circle'
+        };
+        return icons[type] || 'question-circle';
     }
 
     init() {
@@ -215,6 +426,8 @@ class AdminDashboard {
 
         this.formSubmitHandler = null;
         this.buttonClickHandler = null;
+        this.isDeleting = false; // Flag to prevent multiple delete operations
+        this.isToggling = false; // Flag to prevent multiple toggle operations
         this.init();
         this.initializeCounts();
     }
@@ -472,7 +685,12 @@ class AdminDashboard {
     }
 
     async deleteSection(sectionId) {
-        if (!confirm('Are you sure you want to delete this section?')) return;
+        const confirmed = await this.showConfirm(
+            'This section will be permanently deleted and cannot be recovered.',
+            'Delete Section',
+            'danger'
+        );
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`${this.baseUrl}/sections/${sectionId}`, {
@@ -510,7 +728,239 @@ class AdminDashboard {
     }
 
     // =====================
-    // SKILLS MANAGEMENT
+    // SKILLS ECOSYSTEM MANAGEMENT
+    // =====================
+
+    async getSkillsEcosystemContent() {
+        try {
+            const response = await fetch(`${this.baseUrl}/skills-ecosystem/data`);
+            const data = await response.json();
+
+            return `
+                <section class="section-content">
+                    <div class="skills-ecosystem-dashboard">
+                        <!-- Header -->
+                        <div class="ecosystem-header">
+                            <div class="header-content">
+                                <div class="header-left">
+                                    <div class="header-info">
+                                        <h1>Skills Ecosystem</h1>
+                                        <p>Manage your technology stack and expertise</p>
+                                    </div>
+                                </div>
+                                <div class="header-stats">
+                                    <div class="stat-card">
+                                        <div class="stat-icon js-icon">
+                                            <i class="fab fa-js-square"></i>
+                                        </div>
+                                        <div class="stat-info">
+                                            <span class="stat-number">${data.javascriptSkills.length}</span>
+                                            <span class="stat-label">JS Skills</span>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card">
+                                        <div class="stat-icon php-icon">
+                                            <i class="fab fa-php"></i>
+                                        </div>
+                                        <div class="stat-info">
+                                            <span class="stat-number">${data.phpSkills.length}</span>
+                                            <span class="stat-label">PHP Skills</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div class="ecosystem-content">
+                            <!-- JavaScript Ecosystem -->
+                            <div class="ecosystem-panel js-panel">
+                                <div class="panel-header">
+                                    <div class="panel-title">
+                                        <div class="ecosystem-icon js-gradient">
+                                            <i class="fab fa-js-square"></i>
+                                        </div>
+                                        <div class="title-content">
+                                            <h2>${data.javascriptSection?.title || 'JavaScript Ecosystem'}</h2>
+                                            <p>${data.javascriptSection?.description || 'Frontend frameworks and libraries'}</p>
+                                        </div>
+                                    </div>
+                                    <div class="panel-controls">
+                                        <div class="visibility-toggle">
+                                            <input type="checkbox" id="js-visibility" ${data.javascriptSection?.is_visible ? 'checked' : ''}>
+                                            <label for="js-visibility" class="toggle-label">
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-text">Portfolio Visible</span>
+                                            </label>
+                                        </div>
+                                        <button class="control-btn edit-section" onclick="adminDashboard.openSectionModal('javascript')">
+                                            <i class="fas fa-cog"></i>
+                                        </button>
+                                        <button class="control-btn add-skill" onclick="adminDashboard.openSkillModal('javascript')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="panel-body">
+                                    ${data.javascriptSkills.length > 0 ? `
+                                        <div class="skills-grid" id="js-skills">
+                                            ${data.javascriptSkills.map(skill => `
+                                                <div class="skill-card ${skill.is_active ? 'active' : 'inactive'}" data-id="${skill.id}">
+                                                    <div class="skill-header">
+                                                        <div class="skill-icon">
+                                                            <i class="${skill.icon || 'fab fa-js'}"></i>
+                                                        </div>
+                                                        <div class="skill-status">
+                                                            <span class="status-dot ${skill.is_active ? 'active' : 'inactive'}"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="skill-body">
+                                                        <h4 class="skill-name">${skill.name}</h4>
+                                                        <div class="skill-progress">
+                                                            <div class="progress-bar">
+                                                                <div class="progress-fill" style="width: ${skill.proficiency}%"></div>
+                                                            </div>
+                                                            <span class="progress-text">${skill.proficiency}%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="skill-actions">
+                                                        <button class="action-btn toggle skill-toggle-btn" data-skill-id="${skill.id}" title="${skill.is_active ? 'Deactivate' : 'Activate'}">
+                                                            <i class="fas fa-${skill.is_active ? 'eye-slash' : 'eye'}"></i>
+                                                        </button>
+                                                        <button class="action-btn edit skill-edit-btn" data-skill-id="${skill.id}" data-name="${skill.name}" data-icon="${skill.icon}" data-proficiency="${skill.proficiency}" title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="action-btn delete skill-delete-btn" data-skill-id="${skill.id}" title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : `
+                                        <div class="empty-state">
+                                            <div class="empty-icon">
+                                                <i class="fab fa-js-square"></i>
+                                            </div>
+                                            <h3>No JavaScript Skills</h3>
+                                            <p>Start building your JavaScript ecosystem</p>
+                                            <button class="btn-primary" onclick="adminDashboard.openSkillModal('javascript')">
+                                                <i class="fas fa-plus"></i>
+                                                Add First Skill
+                                            </button>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+
+                            <!-- PHP Ecosystem -->
+                            <div class="ecosystem-panel php-panel">
+                                <div class="panel-header">
+                                    <div class="panel-title">
+                                        <div class="ecosystem-icon php-gradient">
+                                            <i class="fab fa-php"></i>
+                                        </div>
+                                        <div class="title-content">
+                                            <h2>${data.phpSection?.title || 'PHP Ecosystem'}</h2>
+                                            <p>${data.phpSection?.description || 'Backend frameworks and tools'}</p>
+                                        </div>
+                                    </div>
+                                    <div class="panel-controls">
+                                        <div class="visibility-toggle">
+                                            <input type="checkbox" id="php-visibility" ${data.phpSection?.is_visible ? 'checked' : ''}>
+                                            <label for="php-visibility" class="toggle-label">
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-text">Portfolio Visible</span>
+                                            </label>
+                                        </div>
+                                        <button class="control-btn edit-section" onclick="adminDashboard.openSectionModal('php')">
+                                            <i class="fas fa-cog"></i>
+                                        </button>
+                                        <button class="control-btn add-skill" onclick="adminDashboard.openSkillModal('php')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="panel-body">
+                                    ${data.phpSkills.length > 0 ? `
+                                        <div class="skills-grid" id="php-skills">
+                                            ${data.phpSkills.map(skill => `
+                                                <div class="skill-card ${skill.is_active ? 'active' : 'inactive'}" data-id="${skill.id}">
+                                                    <div class="skill-header">
+                                                        <div class="skill-icon">
+                                                            <i class="${skill.icon || 'fab fa-php'}"></i>
+                                                        </div>
+                                                        <div class="skill-status">
+                                                            <span class="status-dot ${skill.is_active ? 'active' : 'inactive'}"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="skill-body">
+                                                        <h4 class="skill-name">${skill.name}</h4>
+                                                        <div class="skill-progress">
+                                                            <div class="progress-bar">
+                                                                <div class="progress-fill" style="width: ${skill.proficiency}%"></div>
+                                                            </div>
+                                                            <span class="progress-text">${skill.proficiency}%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="skill-actions">
+                                                        <button class="action-btn toggle skill-toggle-btn" data-skill-id="${skill.id}" title="${skill.is_active ? 'Deactivate' : 'Activate'}">
+                                                            <i class="fas fa-${skill.is_active ? 'eye-slash' : 'eye'}"></i>
+                                                        </button>
+                                                        <button class="action-btn edit skill-edit-btn" data-skill-id="${skill.id}" data-name="${skill.name}" data-icon="${skill.icon}" data-proficiency="${skill.proficiency}" title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="action-btn delete skill-delete-btn" data-skill-id="${skill.id}" title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : `
+                                        <div class="empty-state">
+                                            <div class="empty-icon">
+                                                <i class="fab fa-php"></i>
+                                            </div>
+                                            <h3>No PHP Skills</h3>
+                                            <p>Start building your PHP ecosystem</p>
+                                            <button class="btn-primary" onclick="adminDashboard.openSkillModal('php')">
+                                                <i class="fas fa-plus"></i>
+                                                Add First Skill
+                                            </button>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `;
+        } catch (error) {
+            console.error('Error loading skills ecosystem:', error);
+            return `
+                <section class="section-content">
+                    <div class="section-card">
+                        <div class="card-body">
+                            <div class="text-center">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--danger); margin-bottom: 1rem;"></i>
+                                <h4 style="color: var(--light); margin-bottom: 1rem;">Error Loading Skills Ecosystem</h4>
+                                <p style="color: var(--gray);">Unable to load skills ecosystem. Please check your backend connection.</p>
+                                <button class="btn btn-primary" onclick="adminDashboard.loadSectionContent('skills-ecosystem')">
+                                    <i class="fas fa-redo"></i> Try Again
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+    }
+
+    // =====================
+    // SKILLS MANAGEMENT (LEGACY)
     // =====================
 
     async getSkillsContent() {
@@ -732,7 +1182,12 @@ class AdminDashboard {
     }
 
     async deleteSkill(skillId) {
-        if (!confirm('Are you sure you want to delete this skill?')) return;
+        const confirmed = await this.showConfirm(
+            'This skill will be permanently deleted and cannot be recovered.',
+            'Delete Skill',
+            'danger'
+        );
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`/admin/skills/${skillId}`, {
@@ -768,6 +1223,351 @@ class AdminDashboard {
 
     editSkill(skillId) {
         this.showSkillForm(skillId);
+    }
+
+    // =====================
+    // SKILLS ECOSYSTEM METHODS
+    // =====================
+
+    async toggleSkill(skillId) {
+        if (this.isToggling) return;
+        this.isToggling = true;
+        
+        try {
+            // Update UI immediately for better UX
+            const skillCard = document.querySelector(`[data-id="${skillId}"]`);
+            if (skillCard) {
+                const isCurrentlyActive = skillCard.classList.contains('active');
+                skillCard.classList.toggle('active');
+                skillCard.classList.toggle('inactive');
+                
+                const statusDot = skillCard.querySelector('.status-dot');
+                const toggleBtn = skillCard.querySelector('.skill-toggle-btn i');
+                
+                if (statusDot) {
+                    statusDot.classList.toggle('active');
+                    statusDot.classList.toggle('inactive');
+                }
+                
+                if (toggleBtn) {
+                    toggleBtn.className = isCurrentlyActive ? 'fas fa-eye' : 'fas fa-eye-slash';
+                }
+            }
+
+            const response = await fetch(`${this.baseUrl}/skills-ecosystem/${skillId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ toggle_status: true })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                this.showNotification(result.message, 'success');
+                await this.updateSkillsCount();
+            } else {
+                // Revert UI changes on error
+                if (skillCard) {
+                    skillCard.classList.toggle('active');
+                    skillCard.classList.toggle('inactive');
+                    const statusDot = skillCard.querySelector('.status-dot');
+                    const toggleBtn = skillCard.querySelector('.skill-toggle-btn i');
+                    if (statusDot) {
+                        statusDot.classList.toggle('active');
+                        statusDot.classList.toggle('inactive');
+                    }
+                    if (toggleBtn) {
+                        const isActive = skillCard.classList.contains('active');
+                        toggleBtn.className = isActive ? 'fas fa-eye-slash' : 'fas fa-eye';
+                    }
+                }
+                this.showNotification(result.message || 'Error toggling skill', 'error');
+            }
+        } catch (error) {
+            console.error('Error toggling skill:', error);
+            this.showNotification('Error toggling skill status', 'error');
+        } finally {
+            this.isToggling = false;
+        }
+    }
+
+    openSkillModal(ecosystem) {
+        this.closeModal();
+        
+        const modalHtml = `
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Add ${ecosystem.charAt(0).toUpperCase() + ecosystem.slice(1)} Skill</h3>
+                        <button class="modal-close" onclick="adminDashboard.closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="skill-ecosystem-form">
+                            <input type="hidden" id="skillEcosystem" value="${ecosystem}">
+                            
+                            <div class="form-group">
+                                <label>Skill Name</label>
+                                <input type="text" id="skillName" placeholder="e.g., React, Laravel" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Icon Class</label>
+                                <input type="text" id="skillIcon" placeholder="e.g., fab fa-react">
+                                <small>Use FontAwesome icon classes</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Proficiency Level</label>
+                                <div class="range-input">
+                                    <input type="range" id="skillProficiency" min="1" max="100" value="80">
+                                    <span id="proficiencyValue">80%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Skill</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const modal = document.createElement('div');
+        modal.innerHTML = modalHtml;
+        document.body.appendChild(modal);
+
+        // Bind events
+        const form = modal.querySelector('#skill-ecosystem-form');
+        const slider = modal.querySelector('#skillProficiency');
+        const display = modal.querySelector('#proficiencyValue');
+
+        slider.addEventListener('input', (e) => {
+            display.textContent = e.target.value + '%';
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleSkillEcosystemSubmit(form);
+        });
+    }
+
+    editSkillEcosystem(id, name, icon, proficiency) {
+        this.closeModal();
+        
+        const modalHtml = `
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Edit Skill</h3>
+                        <button class="modal-close" onclick="adminDashboard.closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="skill-ecosystem-form">
+                            <input type="hidden" id="skillId" value="${id}">
+                            
+                            <div class="form-group">
+                                <label>Skill Name</label>
+                                <input type="text" id="skillName" value="${name}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Icon Class</label>
+                                <input type="text" id="skillIcon" value="${icon}">
+                                <small>Use FontAwesome icon classes</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Proficiency Level</label>
+                                <div class="range-input">
+                                    <input type="range" id="skillProficiency" min="1" max="100" value="${proficiency}">
+                                    <span id="proficiencyValue">${proficiency}%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Update Skill</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const modal = document.createElement('div');
+        modal.innerHTML = modalHtml;
+        document.body.appendChild(modal);
+
+        // Bind events
+        const form = modal.querySelector('#skill-ecosystem-form');
+        const slider = modal.querySelector('#skillProficiency');
+        const display = modal.querySelector('#proficiencyValue');
+
+        slider.addEventListener('input', (e) => {
+            display.textContent = e.target.value + '%';
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleSkillEcosystemSubmit(form, id);
+        });
+    }
+
+    async handleSkillEcosystemSubmit(form, skillId = null) {
+        const formData = {
+            name: form.querySelector('#skillName').value,
+            ecosystem: form.querySelector('#skillEcosystem')?.value,
+            icon: form.querySelector('#skillIcon').value,
+            proficiency: form.querySelector('#skillProficiency').value
+        };
+
+        const url = skillId ? 
+            `${this.baseUrl}/skills-ecosystem/${skillId}` : 
+            `${this.baseUrl}/skills-ecosystem`;
+        
+        const method = skillId ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                this.closeModal();
+                this.showNotification(result.message, 'success');
+                await this.loadSectionContent('skills-ecosystem');
+            } else {
+                this.showNotification(result.message || 'Error saving skill', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving skill:', error);
+            this.showNotification('Error saving skill', 'error');
+        } finally {
+            await this.updateSkillsCount();
+        }
+    }
+
+    async deleteSkillEcosystem(skillId) {
+        // Prevent multiple delete operations
+        if (this.isDeleting) return;
+        
+        const confirmed = await this.showConfirm(
+            'This skill will be permanently deleted and cannot be recovered.',
+            'Delete Skill',
+            'danger'
+        );
+        if (!confirmed) return;
+
+        this.isDeleting = true;
+        
+        try {
+            const response = await fetch(`${this.baseUrl}/skills-ecosystem/${skillId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                this.showNotification(result.message, 'success');
+                await this.updateSkillsCount();
+                await this.loadSectionContent('skills-ecosystem');
+            } else {
+                this.showNotification(result.message || 'Error deleting skill', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting skill:', error);
+            this.showNotification('Error deleting skill', 'error');
+        } finally {
+            this.isDeleting = false;
+        }
+    }
+
+    openSectionModal(ecosystem) {
+        this.closeModal();
+        
+        const modalHtml = `
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Edit ${ecosystem.charAt(0).toUpperCase() + ecosystem.slice(1)} Section</h3>
+                        <button class="modal-close" onclick="adminDashboard.closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="section-ecosystem-form">
+                            <input type="hidden" id="sectionEcosystem" value="${ecosystem}">
+                            
+                            <div class="form-group">
+                                <label>Section Title</label>
+                                <input type="text" id="sectionTitle" placeholder="e.g., JavaScript Ecosystem" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="sectionDescription" placeholder="Brief description of this technology stack" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Section</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const modal = document.createElement('div');
+        modal.innerHTML = modalHtml;
+        document.body.appendChild(modal);
+
+        const form = modal.querySelector('#section-ecosystem-form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleSectionEcosystemSubmit(form);
+        });
+    }
+
+    async handleSectionEcosystemSubmit(form) {
+        const formData = {
+            ecosystem: form.querySelector('#sectionEcosystem').value,
+            title: form.querySelector('#sectionTitle').value,
+            description: form.querySelector('#sectionDescription').value
+        };
+
+        try {
+            const response = await fetch(`${this.baseUrl}/skills-ecosystem/update-section`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                this.closeModal();
+                this.showNotification(result.message, 'success');
+                await this.loadSectionContent('skills-ecosystem');
+            } else {
+                this.showNotification(result.message || 'Error updating section', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating section:', error);
+            this.showNotification('Error updating section', 'error');
+        }
     }
 
     // =====================
@@ -969,7 +1769,12 @@ class AdminDashboard {
     }
 
     async deleteProject(projectId) {
-        if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
+        const confirmed = await this.showConfirm(
+            'This project will be permanently deleted and cannot be recovered.',
+            'Delete Project',
+            'danger'
+        );
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`/admin/projects/${projectId}`, {
@@ -1391,7 +2196,12 @@ class AdminDashboard {
     }
 
     async deleteMessage(messageId) {
-        if (!confirm('Are you sure you want to delete this message?')) return;
+        const confirmed = await this.showConfirm(
+            'This message will be permanently deleted and cannot be recovered.',
+            'Delete Message',
+            'danger'
+        );
+        if (!confirmed) return;
 
         try {
             const response = await fetch(`${this.baseUrl}/messages/${messageId}`, {
@@ -1606,8 +2416,8 @@ class AdminDashboard {
                 case 'dashboard':
                     document.getElementById('dashboard').classList.add('active');
                     return;
-                case 'skills':
-                    html = await this.getSkillsContent();
+                case 'skills-ecosystem':
+                    html = await this.getSkillsEcosystemContent();
                     break;
                 case 'projects':
                     html = await this.getProjectsContent();
@@ -1721,10 +2531,73 @@ class AdminDashboard {
                     const match = onclick.match(/deleteSection\((\d+)\)/);
                     if (match) this.deleteSection(parseInt(match[1]));
                 }
+                else if (onclick.includes('toggleSkill')) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const match = onclick.match(/toggleSkill\((\d+)\)/);
+                    if (match) this.toggleSkill(parseInt(match[1]));
+                }
+                else if (onclick.includes('editSkillEcosystem')) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const match = onclick.match(/editSkillEcosystem\((\d+), '([^']*)', '([^']*)', (\d+)\)/);
+                    if (match) this.editSkillEcosystem(parseInt(match[1]), match[2], match[3], parseInt(match[4]));
+                }
+                else if (onclick.includes('deleteSkillEcosystem')) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const match = onclick.match(/deleteSkillEcosystem\((\d+)\)/);
+                    if (match) this.deleteSkillEcosystem(parseInt(match[1]));
+                }
+                else if (onclick.includes('openSkillModal')) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const match = onclick.match(/openSkillModal\('([^']*)'\)/);
+                    if (match) this.openSkillModal(match[1]);
+                }
+                else if (onclick.includes('openSectionModal')) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const match = onclick.match(/openSectionModal\('([^']*)'\)/);
+                    if (match) this.openSectionModal(match[1]);
+                }
             }
         };
 
         document.addEventListener('click', this.buttonClickHandler, true);
+        
+        // Add skill button handlers
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.skill-toggle-btn')) {
+                e.preventDefault();
+                const btn = e.target.closest('.skill-toggle-btn');
+                this.toggleSkill(parseInt(btn.dataset.skillId));
+            }
+            if (e.target.closest('.skill-edit-btn')) {
+                e.preventDefault();
+                const btn = e.target.closest('.skill-edit-btn');
+                this.editSkillEcosystem(
+                    parseInt(btn.dataset.skillId),
+                    btn.dataset.name,
+                    btn.dataset.icon,
+                    parseInt(btn.dataset.proficiency)
+                );
+            }
+            if (e.target.closest('.skill-delete-btn')) {
+                e.preventDefault();
+                const btn = e.target.closest('.skill-delete-btn');
+                this.deleteSkillEcosystem(parseInt(btn.dataset.skillId));
+            }
+        });
+        
+        // Bind ecosystem toggle events
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'js-visibility') {
+                this.toggleSectionVisibility('javascript', e.target.checked);
+            } else if (e.target.id === 'php-visibility') {
+                this.toggleSectionVisibility('php', e.target.checked);
+            }
+        });
     }
 
     removeEventListeners() {
@@ -1764,23 +2637,27 @@ class AdminDashboard {
 
     async updateSkillsCount() {
         try {
-            const response = await fetch(`${this.baseUrl}/skills`);
+            const response = await fetch(`${this.baseUrl}/skills-ecosystem/data`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const skills = await response.json();
+            const data = await response.json();
+            
+            // Count active skills from both ecosystems
+            const activeSkills = [...data.javascriptSkills, ...data.phpSkills].filter(skill => skill.is_active);
+            const totalCount = activeSkills.length;
 
             const skillsCountElement = document.getElementById('skills-count');
             if (skillsCountElement) {
-                skillsCountElement.textContent = skills.length;
+                skillsCountElement.textContent = totalCount;
             }
 
             const statsElement = document.querySelector('[data-stat="skills"] .stat-value');
             if (statsElement) {
-                statsElement.textContent = skills.length;
+                statsElement.textContent = totalCount;
             }
 
-            return skills.length;
+            return totalCount;
         } catch (error) {
             console.error('Error updating skills count:', error);
             return 0;
@@ -1809,6 +2686,27 @@ class AdminDashboard {
         } catch (error) {
             console.error('Error updating projects count:', error);
             return 0;
+        }
+    }
+
+    async toggleSectionVisibility(ecosystem, isVisible) {
+        try {
+            const response = await fetch(`${this.baseUrl}/skills-ecosystem/toggle-section`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ ecosystem: ecosystem })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                this.showNotification(result.message, 'success');
+            }
+        } catch (error) {
+            console.error('Error toggling section visibility:', error);
+            this.showNotification('Error updating section visibility', 'error');
         }
     }
 
@@ -1914,8 +2812,13 @@ class AdminDashboard {
         this.showNotification('Dashboard refreshed', 'success');
     }
 
-    confirmLogout() {
-        if (confirm('Are you sure you want to logout?')) {
+    async confirmLogout() {
+        const confirmed = await this.showConfirm(
+            'You will be logged out of the admin panel.',
+            'Logout Confirmation',
+            'warning'
+        );
+        if (confirmed) {
             this.performLogout();
         }
     }
@@ -1960,6 +2863,10 @@ class AdminDashboard {
 
     showNotification(message, type = 'info') {
         this.notificationSystem.showNotification(message, type);
+    }
+
+    async showConfirm(message, title = 'Confirm Action', type = 'warning') {
+        return await this.notificationSystem.showConfirm(message, title, type);
     }
 
     closeModal() {
@@ -2743,10 +3650,13 @@ function testEmail() {
     });
 }
 
-function createBackup() {
-    if (!confirm('Create a backup now? This may take a few minutes and will include your database and files.')) {
-        return;
-    }
+async function createBackup() {
+    const confirmed = await window.adminDashboard.showConfirm(
+        'This may take a few minutes and will include your database and files.',
+        'Create Backup',
+        'warning'
+    );
+    if (!confirmed) return;
 
     const btn = event.target;
     const originalText = btn.innerHTML;
@@ -2980,11 +3890,14 @@ function loadBackupsList() {
     });
 }
 
-function restoreBackup(backupName, type) {
+async function restoreBackup(backupName, type) {
     const typeText = type === 'database' ? 'database' : 'files';
-    if (!confirm(`⚠️ DANGER: This will restore the ${typeText} from backup "${backupName}" and OVERWRITE current data. This cannot be undone. Continue?`)) {
-        return;
-    }
+    const confirmed = await window.adminDashboard.showConfirm(
+        `This will restore the ${typeText} from backup "${backupName}" and OVERWRITE current data. This cannot be undone.`,
+        '⚠️ DANGER: Restore Backup',
+        'danger'
+    );
+    if (!confirmed) return;
     
     fetch(`/admin/settings/backup/${backupName}/restore`, {
         method: 'POST',
@@ -3018,10 +3931,13 @@ function restoreBackup(backupName, type) {
     });
 }
 
-function testAutoBackup() {
-    if (!confirm('Test automatic backup? This will create a test backup using the auto-backup command.')) {
-        return;
-    }
+async function testAutoBackup() {
+    const confirmed = await window.adminDashboard.showConfirm(
+        'This will create a test backup using the auto-backup command.',
+        'Test Auto Backup',
+        'warning'
+    );
+    if (!confirmed) return;
 
     const btn = event.target;
     const originalText = btn.innerHTML;
@@ -3089,10 +4005,13 @@ function checkCronStatus() {
     });
 }
 
-function deleteBackup(backupName) {
-    if (!confirm(`Are you sure you want to delete backup "${backupName}"? This action cannot be undone.`)) {
-        return;
-    }
+async function deleteBackup(backupName) {
+    const confirmed = await window.adminDashboard.showConfirm(
+        `Backup "${backupName}" will be permanently deleted and cannot be recovered.`,
+        'Delete Backup',
+        'danger'
+    );
+    if (!confirmed) return;
     
     fetch(`/admin/settings/backup/${backupName}`, {
         method: 'DELETE',

@@ -283,7 +283,7 @@
       /* Enhanced Contact Section */
       .contact-section {
          padding: 120px 0;
-         background: var(--gradient-dark);
+         /* background: var(--gradient-dark); */
          min-height: 100vh;
          position: relative;
          overflow: hidden;

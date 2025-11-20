@@ -28,3 +28,6 @@ Thumbs.db
 .phpunit.result.cache
 /storage/*.key
 /public/storage
+
+# Security - Hide seeders from GitHub
+/database/seeders/

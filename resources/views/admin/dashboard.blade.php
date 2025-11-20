@@ -45,9 +45,9 @@
                                 <i class="nav-icon fas fa-layer-group"></i>
                                 <span>Sections</span>
                             </a></li>
-                        <li><a href="#" class="nav-link" data-section="skills">
+                        <li><a href="#" class="nav-link" data-section="skills-ecosystem">
                                 <i class="nav-icon fas fa-code"></i>
-                                <span>Skills</span>
+                                <span>Skills Ecosystem</span>
                                 <span class="nav-badge" id="skills-count">0</span>
                             </a></li>
                         <li><a href="#" class="nav-link" data-section="projects">

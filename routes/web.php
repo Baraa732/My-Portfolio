@@ -3,7 +3,7 @@
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SkillController;
+use App\Http\Controllers\SkillEcosystemController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ContactController;
@@ -59,13 +59,7 @@ Route::middleware(['admin', 'rate.limit:300,1', 'sanitize'])->prefix('admin')->n
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/dashboard-data', [AdminController::class, 'getDashboardData'])->name('dashboard.data');
 
-    // Skills routes
-    Route::get('/skills', [SkillController::class, 'index'])->name('skills.index');
-    Route::post('/skills', [SkillController::class, 'store'])->name('skills.store');
-    Route::get('/skills/{id}', [SkillController::class, 'show'])->name('skills.show');
-    
-    Route::put('/skills/{id}', [SkillController::class, 'update'])->name('skills.update');
-    Route::delete('/skills/{id}', [SkillController::class, 'destroy'])->name('skills.destroy');
+
 
     // Projects routes
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
@@ -107,6 +101,16 @@ Route::middleware(['admin', 'rate.limit:300,1', 'sanitize'])->prefix('admin')->n
     Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
     Route::post('/settings/test-email', [\App\Http\Controllers\SettingsController::class, 'testEmail'])->name('settings.test-email');
+    
+    // Skill Ecosystems
+    Route::get('/skills-ecosystem', [SkillEcosystemController::class, 'index'])->name('skills-ecosystem.index');
+    Route::get('/skills-ecosystem/data', [SkillEcosystemController::class, 'getData'])->name('skills-ecosystem.data');
+    Route::post('/skills-ecosystem', [SkillEcosystemController::class, 'store'])->name('skills-ecosystem.store');
+    Route::put('/skills-ecosystem/{skill}', [SkillEcosystemController::class, 'update'])->name('skills-ecosystem.update');
+    Route::delete('/skills-ecosystem/{skill}', [SkillEcosystemController::class, 'destroy'])->name('skills-ecosystem.destroy');
+    Route::post('/skills-ecosystem/order', [SkillEcosystemController::class, 'updateOrder'])->name('skills-ecosystem.order');
+    Route::post('/skills-ecosystem/toggle-section', [SkillEcosystemController::class, 'toggleSection'])->name('skills-ecosystem.toggle-section');
+    Route::post('/skills-ecosystem/update-section', [SkillEcosystemController::class, 'updateSection'])->name('skills-ecosystem.update-section');
     
     // Backup routes
     Route::post('/settings/backup/create', [\App\Http\Controllers\SettingsController::class, 'createBackup'])->name('settings.backup.create');

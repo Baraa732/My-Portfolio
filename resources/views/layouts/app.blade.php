@@ -67,7 +67,7 @@
         /* Professional Navigation */
         .navbar {
             /* background: rgba(15, 20, 25, 0.95); */
-            backdrop-filter: blur(40px);
+            /* backdrop-filter: blur(40px); */
             -webkit-backdrop-filter: blur(40px);
             position: fixed;
             top: 0;
@@ -533,7 +533,7 @@
             border-radius: 50%;
             transition: var(--transition);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
+            /* backdrop-filter: blur(20px); */
             position: relative;
             overflow: hidden;
         }
@@ -654,7 +654,7 @@
                 left: 0;
                 width: 100%;
                 background: rgba(10, 15, 20, 0.98);
-                backdrop-filter: blur(40px);
+                /* backdrop-filter: blur(40px); */
                 flex-direction: column;
                 padding: 2rem;
                 gap: 1.5rem;

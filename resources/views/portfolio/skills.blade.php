@@ -4,81 +4,76 @@
    <div class="container">
       <div class="section-title">
          <h2>Technical Skills</h2>
-         <p class="section-subtitle">A showcase of my technical expertise and proficiency levels across various
-            technologies and tools</p>
+         <p class="section-subtitle">A showcase of my technical expertise across different technology ecosystems</p>
       </div>
 
-      <div class="skills-grid">
-         @foreach($skills as $skill)
-            <div class="skill-item animate-on-scroll" data-animation="fadeInUp"
-               data-skill-type="{{ strtolower($skill->category ?? 'frontend') }}">
-               <!-- Animated background effect -->
-               <div class="skill-background-shimmer"></div>
-
-               <div class="skill-header">
-                  <div class="skill-info-main">
-                     <div class="skill-icon">
-                        <i class="{{ $skill->icon }}"></i>
-                     </div>
-                     <div class="skill-text">
-                        <h3 class="skill-name">{{ $skill->name }}</h3>
-                        {{-- <span class="skill-level">{{ $skill->getProficiencyLevel() }}</span> --}}
-                     </div>
-                  </div>
-                  <div class="skill-percentage">{{ $skill->percentage }}%</div>
-               </div>
-
-               <div class="skill-progress-container">
-                  <div class="skill-progress" data-width="{{ $skill->percentage }}">
-                     <div class="skill-progress-shimmer"></div>
-                  </div>
-               </div>
-
-               <div class="skill-meta">
-                  <span class="skill-label">Proficiency</span>
-                  {{-- <span class="skill-expertise">{{ $skill->getExpertiseLevel() }}</span> --}}
-               </div>
+         <!-- JavaScript Ecosystem -->
+      @if($javascriptSection)
+      <div class="ecosystem-section animate-on-scroll" data-animation="fadeInUp">
+         <div class="ecosystem-header">
+            <div class="ecosystem-icon">
+               <i class="fab fa-js-square"></i>
             </div>
-         @endforeach
-      </div>
-
-      <!-- Skills Categories -->
-      <div class="skills-categories animate-on-scroll" data-animation="fadeInUp">
-         <div class="categories-grid">
-            <div class="category-card frontend">
-               <div class="category-icon">
-                  <i class="fas fa-code"></i>
-               </div>
-               <h3 class="category-title">Frontend</h3>
-               <p class="category-description">React, Vue.js, JavaScript, TypeScript, CSS3, HTML5</p>
-               <div class="category-progress">
-                  <div class="category-progress-bar" style="width: 90%"></div>
-               </div>
-            </div>
-
-            <div class="category-card backend">
-               <div class="category-icon">
-                  <i class="fas fa-server"></i>
-               </div>
-               <h3 class="category-title">Backend</h3>
-               <p class="category-description">Node.js, Laravel, Python, Express.js, MongoDB, MySQL</p>
-               <div class="category-progress">
-                  <div class="category-progress-bar" style="width: 85%"></div>
-               </div>
-            </div>
-
-            <div class="category-card tools">
-               <div class="category-icon">
-                  <i class="fas fa-tools"></i>
-               </div>
-               <h3 class="category-title">Tools</h3>
-               <p class="category-description">Git, Docker, AWS, Figma, Webpack, Jest</p>
-               <div class="category-progress">
-                  <div class="category-progress-bar" style="width: 80%"></div>
-               </div>
+            <div class="ecosystem-content">
+               <h2 class="ecosystem-title">{{ $javascriptSection->title }}</h2>
+               @if($javascriptSection->description)
+               <p class="ecosystem-description">{{ $javascriptSection->description }}</p>
+               @endif
             </div>
          </div>
+         
+         <div class="ecosystem-skills">
+            @foreach($javascriptSkills as $skill)
+            <div class="ecosystem-skill-item animate-on-scroll" data-animation="fadeInUp">
+               <div class="ecosystem-skill-icon">
+                  <i class="{{ $skill->icon ?: 'fab fa-js' }}"></i>
+               </div>
+               <div class="ecosystem-skill-info">
+                  <h4 class="ecosystem-skill-name">{{ $skill->name }}</h4>
+                  <div class="ecosystem-skill-progress">
+                     <div class="ecosystem-progress-bar" data-width="{{ $skill->proficiency }}"></div>
+                     <span class="ecosystem-percentage">{{ $skill->proficiency }}%</span>
+                  </div>
+               </div>
+            </div>
+            @endforeach
+         </div>
       </div>
+      @endif
+
+      <!-- PHP Ecosystem -->
+      @if($phpSection)
+      <div class="ecosystem-section animate-on-scroll" data-animation="fadeInUp">
+         <div class="ecosystem-header">
+            <div class="ecosystem-icon">
+               <i class="fab fa-php"></i>
+            </div>
+            <div class="ecosystem-content">
+               <h2 class="ecosystem-title">{{ $phpSection->title }}</h2>
+               @if($phpSection->description)
+               <p class="ecosystem-description">{{ $phpSection->description }}</p>
+               @endif
+            </div>
+         </div>
+         
+         <div class="ecosystem-skills">
+            @foreach($phpSkills as $skill)
+            <div class="ecosystem-skill-item animate-on-scroll" data-animation="fadeInUp">
+               <div class="ecosystem-skill-icon">
+                  <i class="{{ $skill->icon ?: 'fab fa-php' }}"></i>
+               </div>
+               <div class="ecosystem-skill-info">
+                  <h4 class="ecosystem-skill-name">{{ $skill->name }}</h4>
+                  <div class="ecosystem-skill-progress">
+                     <div class="ecosystem-progress-bar" data-width="{{ $skill->proficiency }}"></div>
+                     <span class="ecosystem-percentage">{{ $skill->proficiency }}%</span>
+                  </div>
+               </div>
+            </div>
+            @endforeach
+         </div>
+      </div>
+      @endif
    </div>
 </section>
 
@@ -86,7 +81,6 @@
    /* Enhanced Skills Section */
    .skills-section {
       padding: 120px 0;
-      background: var(--gradient-dark);
       position: relative;
       overflow: hidden;
    }
@@ -380,17 +374,149 @@
       transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
    }
 
-   /* Color Variations for Categories */
-   .category-card.frontend:hover {
-      border-color: rgba(59, 130, 246, 0.4);
+   /* Ecosystem Sections */
+   .ecosystem-section {
+      margin-top: 4rem;
+      background: linear-gradient(145deg, rgba(26, 54, 93, 0.3), rgba(15, 20, 25, 0.5));
+      border-radius: var(--border-radius);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      padding: 3rem;
+      position: relative;
+      overflow: hidden;
    }
 
-   .category-card.backend:hover {
-      border-color: rgba(16, 185, 129, 0.4);
+   .ecosystem-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(76, 111, 255, 0.05), transparent);
+      transition: var(--transition);
    }
 
-   .category-card.tools:hover {
-      border-color: rgba(245, 158, 11, 0.4);
+   .ecosystem-section:hover::before {
+      left: 100%;
+   }
+
+   .ecosystem-header {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      margin-bottom: 3rem;
+      position: relative;
+      z-index: 2;
+   }
+
+   .ecosystem-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--gradient);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      flex-shrink: 0;
+   }
+
+   .ecosystem-icon i {
+      font-size: 2.5rem;
+      color: var(--light);
+   }
+
+   .ecosystem-title {
+      color: var(--light);
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+   }
+
+   .ecosystem-description {
+      color: var(--gray);
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin: 0;
+   }
+
+   .ecosystem-skills {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      position: relative;
+      z-index: 2;
+   }
+
+   .ecosystem-skill-item {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: var(--transition);
+      backdrop-filter: blur(10px);
+   }
+
+   .ecosystem-skill-item:hover {
+      transform: translateY(-3px);
+      border-color: rgba(76, 111, 255, 0.3);
+      box-shadow: 0 8px 25px rgba(76, 111, 255, 0.15);
+   }
+
+   .ecosystem-skill-icon {
+      width: 50px;
+      height: 50px;
+      background: var(--gradient);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      transition: var(--transition);
+   }
+
+   .ecosystem-skill-item:hover .ecosystem-skill-icon {
+      transform: scale(1.1) rotate(5deg);
+   }
+
+   .ecosystem-skill-icon i {
+      font-size: 1.5rem;
+      color: var(--light);
+   }
+
+   .ecosystem-skill-name {
+      color: var(--light);
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+   }
+
+   .ecosystem-skill-progress {
+      position: relative;
+   }
+
+   .ecosystem-progress-bar {
+      height: 8px;
+      background: var(--gradient);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+   }
+
+   .ecosystem-percentage {
+      position: absolute;
+      right: 0;
+      top: -25px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent);
    }
 
    /* Animations */
@@ -575,6 +701,28 @@
 
       skillItems.forEach(item => {
          observer.observe(item);
+      });
+      
+      // Animate ecosystem progress bars
+      const ecosystemItems = document.querySelectorAll('.ecosystem-skill-item');
+      
+      const ecosystemObserver = new IntersectionObserver((entries) => {
+         entries.forEach(entry => {
+            if (entry.isIntersecting) {
+               const progressBar = entry.target.querySelector('.ecosystem-progress-bar');
+               const width = progressBar.getAttribute('data-width');
+               
+               setTimeout(() => {
+                  progressBar.style.width = width + '%';
+               }, 300);
+               
+               ecosystemObserver.unobserve(entry.target);
+            }
+         });
+      }, { threshold: 0.3 });
+      
+      ecosystemItems.forEach(item => {
+         ecosystemObserver.observe(item);
       });
    });
 </script>

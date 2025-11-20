@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Section;
-use App\Models\Skill;
+use App\Models\SkillEcosystem;
+use App\Models\EcosystemSection;
 use App\Models\Project;
 use App\Models\Contact;
 use App\Models\User;
@@ -16,10 +17,13 @@ class PortfolioController extends Controller
     {
         $this->trackVisit('/');
         $homeSection = Section::where('name', 'home')->first();
-        $skills = Skill::where('is_active', true)->orderBy('order')->get();
         $projects = Project::where('is_active', true)->orderBy('order')->get();
+        
+        // Get ecosystem skills for home page
+        $javascriptSkills = SkillEcosystem::byEcosystem('javascript')->active()->ordered()->limit(3)->get();
+        $phpSkills = SkillEcosystem::byEcosystem('php')->active()->ordered()->limit(3)->get();
 
-        return view('portfolio.home', compact('homeSection', 'skills', 'projects'));
+        return view('portfolio.home', compact('homeSection', 'projects', 'javascriptSkills', 'phpSkills'));
     }
 
     public function about()
@@ -31,8 +35,16 @@ class PortfolioController extends Controller
 
     public function skills()
     {
-        $skills = Skill::where('is_active', true)->orderBy('order')->get();
-        return view('portfolio.skills', compact('skills'));
+        // Get ecosystem sections and skills
+        $javascriptSection = EcosystemSection::where('ecosystem', 'javascript')->visible()->first();
+        $phpSection = EcosystemSection::where('ecosystem', 'php')->visible()->first();
+        
+        $javascriptSkills = $javascriptSection ? 
+            SkillEcosystem::byEcosystem('javascript')->active()->ordered()->get() : collect();
+        $phpSkills = $phpSection ? 
+            SkillEcosystem::byEcosystem('php')->active()->ordered()->get() : collect();
+        
+        return view('portfolio.skills', compact('javascriptSection', 'phpSection', 'javascriptSkills', 'phpSkills'));
     }
 
     public function projects()
