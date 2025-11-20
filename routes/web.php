@@ -104,11 +104,9 @@ Route::middleware(['admin', 'rate.limit:300,1', 'sanitize'])->prefix('admin')->n
     Route::post('/profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
 
     // Notification routes
-    Route::get('/notifications', [AdminController::class, 'getNotifications'])->name('notifications');
-    Route::post('/notifications/{id}/read', [AdminController::class, 'markNotificationAsRead'])->name('notifications.read');
-    Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllNotificationsAsRead'])->name('notifications.mark-all-read');
-    Route::delete('/notifications/{id}', [AdminController::class, 'deleteNotification'])->name('notifications.delete');
-    Route::delete('/notifications/clear-all', [AdminController::class, 'clearAllNotifications'])->name('notifications.clear-all');
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications');
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     
     // Analytics
     Route::get('/analytics', [AdminController::class, 'getAnalytics'])->name('analytics');

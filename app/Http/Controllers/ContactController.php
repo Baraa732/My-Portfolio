@@ -8,9 +8,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Models\Message;
 use App\Notifications\NewContactMessage;
-use App\Models\User;
-use Illuminate\Support\Facades\Notification;
 use App\Services\ActivityLogger;
+use App\Facades\NotificationService;
 
 class ContactController extends Controller
 {
@@ -92,16 +91,8 @@ class ContactController extends Controller
             
             ActivityLogger::log('message_received', "New message from {$request->name}: {$request->subject}", $message);
 
-            // Send notification to admin users
-            try {
-                $adminUsers = User::where('is_admin', true)->get();
-                if ($adminUsers->isNotEmpty()) {
-                    Notification::send($adminUsers, new NewContactMessage($message));
-                }
-            } catch (\Exception $notificationError) {
-                Log::error('Notification error: ' . $notificationError->getMessage());
-                // Don't fail the entire request if notifications fail
-            }
+            // Send notification to admin users using the notification service
+            NotificationService::sendToAdmins(new NewContactMessage($message));
 
             $data = [
                 'name' => $request->name,
