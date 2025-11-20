@@ -16,17 +16,47 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        // Enhanced validation with security rules
         $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|min:6',
+            'email' => 'required|email|max:255|regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
+            'password' => 'required|min:6|max:255|regex:/^[\x20-\x7E]*$/',
         ]);
 
-        // Add honeypot check
+        // Honeypot check (bot detection)
         if ($request->filled('website')) {
+            \Log::warning('Honeypot triggered', [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'honeypot_value' => $request->input('website')
+            ]);
+            
             if ($request->ajax()) {
                 return response()->json(['message' => 'Invalid request.'], 422);
             }
             return back()->withErrors(['email' => 'Invalid request.']);
+        }
+        
+        // Check for suspicious patterns in input
+        $suspiciousPatterns = [
+            '/(<script[^>]*>.*?<\/script>)/is',
+            '/(javascript:|vbscript:|onload=|onerror=)/i',
+            '/(union|select|insert|update|delete|drop|create|alter)/i'
+        ];
+        
+        foreach ($suspiciousPatterns as $pattern) {
+            if (preg_match($pattern, $request->input('email')) || 
+                preg_match($pattern, $request->input('password'))) {
+                \Log::warning('Suspicious input detected in login', [
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'email' => $request->input('email')
+                ]);
+                
+                if ($request->ajax()) {
+                    return response()->json(['message' => 'Invalid input detected.'], 422);
+                }
+                return back()->withErrors(['email' => 'Invalid input detected.']);
+            }
         }
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
@@ -35,6 +65,14 @@ class AuthController extends Controller
             if (!$user->is_admin) {
                 Auth::logout();
                 $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                
+                \Log::warning('Non-admin login attempt', [
+                    'user_id' => $user->uuid,
+                    'email' => $user->email,
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->userAgent()
+                ]);
                 
                 if ($request->ajax()) {
                     return response()->json(['message' => 'Access denied. Admin privileges required.'], 403);
@@ -47,8 +85,18 @@ class AuthController extends Controller
             // Regenerate session ID to prevent session fixation
             $request->session()->regenerate();
             
-            // Log successful login
-            \Log::info('Admin login successful', ['user_id' => $user->uuid, 'ip' => $request->ip()]);
+            // Set admin verification flag
+            $request->session()->put('admin_verified', true);
+            $request->session()->put('last_regenerated', now()->timestamp);
+            
+            // Log successful login with more details
+            \Log::info('Admin login successful', [
+                'user_id' => $user->uuid,
+                'email' => $user->email,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'timestamp' => now()->toISOString()
+            ]);
             ActivityLogger::logLogin($user);
             
             if ($request->ajax()) {
@@ -57,8 +105,14 @@ class AuthController extends Controller
             return redirect()->intended('/admin');
         }
 
-        // Log failed login attempt
-        \Log::warning('Failed login attempt', ['email' => $request->email, 'ip' => $request->ip()]);
+        // Log failed login attempt with more details
+        \Log::warning('Failed login attempt', [
+            'email' => $request->input('email'),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'timestamp' => now()->toISOString(),
+            'referer' => $request->header('referer')
+        ]);
 
         if ($request->ajax()) {
             return response()->json(['message' => 'The provided credentials do not match our records.'], 422);

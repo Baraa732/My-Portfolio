@@ -16,13 +16,46 @@ class ContactController extends Controller
 {
     public function submit(Request $request)
     {
-        // Validate the request
+        // Enhanced validation with security rules
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'subject' => 'required|string|max:255',
+            'name' => 'required|string|max:255|regex:/^[a-zA-Z\s\-\'\.À-ſ]+$/u',
+            'email' => 'required|email|max:255|regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
+            'subject' => 'required|string|max:255|regex:/^[a-zA-Z0-9\s\-_.,!?()]+$/',
             'message' => 'required|string|min:10|max:2000'
+        ], [
+            'name.regex' => 'Name contains invalid characters.',
+            'email.regex' => 'Please enter a valid email address.',
+            'subject.regex' => 'Subject contains invalid characters.',
         ]);
+        
+        // Check for suspicious patterns
+        $suspiciousPatterns = [
+            '/(<script[^>]*>.*?<\/script>)/is',
+            '/(javascript:|vbscript:|onload=|onerror=)/i',
+            '/(union|select|insert|update|delete|drop|create|alter)/i',
+            '/(<iframe|<object|<embed|<link|<meta)/i'
+        ];
+        
+        $inputFields = ['name', 'email', 'subject', 'message'];
+        foreach ($inputFields as $field) {
+            $value = $request->input($field, '');
+            foreach ($suspiciousPatterns as $pattern) {
+                if (preg_match($pattern, $value)) {
+                    \Log::warning('Suspicious input detected in contact form', [
+                        'field' => $field,
+                        'value' => $value,
+                        'ip' => $request->ip(),
+                        'user_agent' => $request->userAgent()
+                    ]);
+                    
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid content detected. Please remove any HTML or script tags.',
+                        'errors' => [$field => ['Invalid content detected.']]
+                    ], 422);
+                }
+            }
+        }
 
         if ($validator->fails()) {
             return response()->json([
@@ -33,17 +66,29 @@ class ContactController extends Controller
         }
 
         try {
-            // Save to messages table
-            $message = Message::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'subject' => $request->subject,
-                'message' => $request->message,
+            // Sanitize input data
+            $sanitizedData = [
+                'name' => htmlspecialchars(strip_tags($request->input('name')), ENT_QUOTES, 'UTF-8'),
+                'email' => filter_var($request->input('email'), FILTER_SANITIZE_EMAIL),
+                'subject' => htmlspecialchars(strip_tags($request->input('subject')), ENT_QUOTES, 'UTF-8'),
+                'message' => htmlspecialchars(strip_tags($request->input('message')), ENT_QUOTES, 'UTF-8'),
                 'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
+                'user_agent' => htmlspecialchars($request->userAgent(), ENT_QUOTES, 'UTF-8'),
                 'is_read' => false,
                 'is_reply' => false
-            ]);
+            ];
+            
+            // Additional email validation
+            if (!filter_var($sanitizedData['email'], FILTER_VALIDATE_EMAIL)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid email address format.',
+                    'errors' => ['email' => ['Invalid email address format.']]
+                ], 422);
+            }
+            
+            // Save to messages table
+            $message = Message::create($sanitizedData);
             
             ActivityLogger::log('message_received', "New message from {$request->name}: {$request->subject}", $message);
 

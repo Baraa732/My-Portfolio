@@ -99,13 +99,19 @@ class AdminController extends Controller
         $user = Auth::user();
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->uuid . ',uuid',
-            'title' => 'nullable|string|max:255',
-            'bio' => 'nullable|string',
-            'phone' => 'nullable|string|max:20',
-            'location' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255|regex:/^[a-zA-Z\s\-\'\.À-ſ]+$/u',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->uuid . ',uuid|regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/',
+            'title' => 'nullable|string|max:255|regex:/^[a-zA-Z0-9\s\-_.,()]+$/',
+            'bio' => 'nullable|string|max:1000',
+            'phone' => 'nullable|string|max:20|regex:/^[+]?[0-9\s\-()]+$/',
+            'location' => 'nullable|string|max:255|regex:/^[a-zA-Z0-9\s\-_.,()]+$/',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ], [
+            'name.regex' => 'Name contains invalid characters.',
+            'email.regex' => 'Please enter a valid email address.',
+            'title.regex' => 'Title contains invalid characters.',
+            'phone.regex' => 'Phone number contains invalid characters.',
+            'location.regex' => 'Location contains invalid characters.',
         ]);
 
         if ($validator->fails()) {
@@ -116,7 +122,15 @@ class AdminController extends Controller
             ], 422);
         }
 
-        $data = $request->only(['name', 'email', 'title', 'bio', 'phone', 'location']);
+        // Sanitize input data
+        $data = [
+            'name' => htmlspecialchars(strip_tags($request->input('name')), ENT_QUOTES, 'UTF-8'),
+            'email' => filter_var($request->input('email'), FILTER_SANITIZE_EMAIL),
+            'title' => htmlspecialchars(strip_tags($request->input('title')), ENT_QUOTES, 'UTF-8'),
+            'bio' => htmlspecialchars(strip_tags($request->input('bio')), ENT_QUOTES, 'UTF-8'),
+            'phone' => htmlspecialchars(strip_tags($request->input('phone')), ENT_QUOTES, 'UTF-8'),
+            'location' => htmlspecialchars(strip_tags($request->input('location')), ENT_QUOTES, 'UTF-8'),
+        ];
 
         if ($request->hasFile('avatar')) {
             // Delete old avatar if exists
@@ -149,8 +163,10 @@ class AdminController extends Controller
     public function updatePassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
+            'current_password' => 'required|string|max:255',
+            'new_password' => 'required|string|min:8|max:255|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/',
+        ], [
+            'new_password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
         ]);
 
         if ($validator->fails()) {

@@ -54,8 +54,9 @@
                     <div class="input-wrapper">
                         <i class="fas fa-envelope input-icon"></i>
                         <input type="email" name="email" class="form-input" placeholder="Email Address" 
-                               value="" required autocomplete="new-password" autofocus 
-                               data-lpignore="true" data-form-type="other">
+                               value="{{ old('email') }}" required autocomplete="new-password" autofocus 
+                               data-lpignore="true" data-form-type="other" 
+                               maxlength="255" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}">
                         <div class="input-line"></div>
                     </div>
                     @error('email')
@@ -69,7 +70,8 @@
                         <i class="fas fa-lock input-icon"></i>
                         <input type="password" name="password" class="form-input" placeholder="Password" 
                                required autocomplete="new-password" 
-                               data-lpignore="true" data-form-type="other">
+                               data-lpignore="true" data-form-type="other" 
+                               maxlength="255" minlength="6">
                         <button type="button" class="password-toggle">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -89,8 +91,11 @@
                     </label>
                 </div>
 
-                <!-- Honeypot -->
-                <input type="text" name="website" style="display: none;" tabindex="-1" autocomplete="off">
+                <!-- Enhanced Honeypot -->
+                <input type="text" name="website" style="display: none !important; position: absolute !important; left: -9999px !important;" 
+                       tabindex="-1" autocomplete="off" aria-hidden="true">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="timestamp" value="{{ time() }}">
 
                 <!-- Submit Button -->
                 <button type="submit" class="login-btn">

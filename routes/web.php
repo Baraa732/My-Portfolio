@@ -14,23 +14,39 @@ use Illuminate\Support\Facades\Route;
 // MAIN FRONTEND ROUTES
 // =====================
 
-// Portfolio Routes
-Route::get('/', [PortfolioController::class, 'home'])->name('home');
-Route::get('/about', [PortfolioController::class, 'about'])->name('about');
-Route::get('/skills', [PortfolioController::class, 'skills'])->name('skills');
-Route::get('/projects', [PortfolioController::class, 'projects'])->name('projects');
-Route::get('/contact', [PortfolioController::class, 'contact'])->name('contact');
-Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
-Route::get('/download-cv', [PortfolioController::class, 'downloadCV'])->name('download.cv');
+// Portfolio Routes with rate limiting
+Route::middleware(['rate.limit:120,1'])->group(function () {
+    Route::get('/', [PortfolioController::class, 'home'])->name('home');
+    Route::get('/about', [PortfolioController::class, 'about'])->name('about');
+    Route::get('/skills', [PortfolioController::class, 'skills'])->name('skills');
+    Route::get('/projects', [PortfolioController::class, 'projects'])->name('projects');
+    Route::get('/contact', [PortfolioController::class, 'contact'])->name('contact');
+    Route::get('/download-cv', [PortfolioController::class, 'downloadCV'])->name('download.cv');
+});
+
+// Contact form with stricter rate limiting and sanitization
+Route::post('/contact', [ContactController::class, 'submit'])
+    ->middleware(['rate.limit:5,10', 'sanitize'])
+    ->name('contact.submit');
 
 // =====================
 // AUTH ROUTES
 // =====================
 
-Route::get('/admin/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.submit')->middleware('throttle.login');
-Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('throttle.login');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+// Auth routes with enhanced security
+Route::middleware(['rate.limit:10,5'])->group(function () {
+    Route::get('/admin/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/admin/login', [AuthController::class, 'login'])
+        ->middleware(['throttle.login', 'sanitize'])
+        ->name('admin.login.submit');
+    Route::post('/login', [AuthController::class, 'login'])
+        ->middleware(['throttle.login', 'sanitize'])
+        ->name('login');
+});
+
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->middleware(['auth', 'admin'])
+    ->name('logout');
 
 // CSRF token refresh route (accessible without authentication)
 Route::get('/admin/csrf-token', function() {
@@ -46,7 +62,7 @@ Route::get('/admin', function () {
 // PROTECTED ADMIN ROUTES
 // =====================
 
-Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['admin', 'rate.limit:300,1', 'sanitize'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/dashboard-data', [AdminController::class, 'getDashboardData'])->name('dashboard.data');

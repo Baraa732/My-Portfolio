@@ -64,29 +64,41 @@
             <div class="contact-form-container animate-on-scroll" data-animation="fadeInRight">
                <div class="contact-form-card">
                   <h3>Send Message</h3>
-                  <form id="contact-form" method="POST" class="contact-form">
+                  <form id="contact-form" method="POST" class="contact-form" novalidate>
                      @csrf
+                     <!-- Honeypot field -->
+                     <input type="text" name="website" style="display: none !important; position: absolute !important; left: -9999px !important;" 
+                            tabindex="-1" autocomplete="off" aria-hidden="true">
+                     
                      <div class="form-row">
                         <div class="form-group">
                            <label for="name" class="form-label">Full Name *</label>
-                           <input type="text" id="name" name="name" class="form-control" required>
+                           <input type="text" id="name" name="name" class="form-control" required 
+                                  maxlength="255" pattern="[a-zA-Z\s\-\'\.À-ſ]+" 
+                                  title="Please enter a valid name (letters, spaces, hyphens, apostrophes, and periods only)">
                         </div>
 
                         <div class="form-group">
-                           <label for="email" class="form-label">Subject *</label>
-                           <input type="email" id="email" name="subject" class="form-control" required>
+                           <label for="subject" class="form-label">Subject *</label>
+                           <input type="text" id="subject" name="subject" class="form-control" required 
+                                  maxlength="255" pattern="[a-zA-Z0-9\s\-_.,!?()]+" 
+                                  title="Please enter a valid subject">
                         </div>
                      </div>
 
                      <div class="form-group">
-                        <label for="subject" class="form-label">Email Address *</label>
-                        <input type="text" id="subject" name="email" class="form-control" required>
+                        <label for="email" class="form-label">Email Address *</label>
+                        <input type="email" id="email" name="email" class="form-control" required 
+                               maxlength="255" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" 
+                               title="Please enter a valid email address">
                      </div>
 
                      <div class="form-group">
                         <label for="message" class="form-label">Message *</label>
                         <textarea id="message" name="message" class="form-control" rows="6" required
-                           placeholder="Tell me about your project..."></textarea>
+                                  maxlength="2000" minlength="10"
+                                  placeholder="Tell me about your project..." 
+                                  title="Please enter your message (10-2000 characters)"></textarea>
                      </div>
 
                      <button type="submit" class="btn btn-primary btn-full" id="submit-btn">
